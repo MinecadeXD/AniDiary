@@ -40,8 +40,8 @@ jobs:
 
       - name: Set AniDiary version
         run: |
-          sed -i 's/versionCode .*/versionCode 10401/' android/app/build.gradle
-          sed -i 's/versionName .*/versionName "1.4.1"/' android/app/build.gradle
+          sed -i 's/versionCode .*/versionCode 10402/' android/app/build.gradle
+          sed -i 's/versionName .*/versionName "1.4.2"/' android/app/build.gradle
 
       - name: Make Gradle executable
         run: chmod +x android/gradlew
@@ -56,5 +56,5 @@ jobs:
       - name: Upload AniDiary APK
         uses: actions/upload-artifact@v4
         with:
-          name: AniDiary-1.4.1
+          name: AniDiary-1.4.2
           path: AniDiary.apk

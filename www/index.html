@@ -556,7 +556,7 @@
                 <div class="grid grid-cols-2 gap-2.5">
                     <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
                         <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-500 mb-1">Version</span>
-                        <span class="text-sm font-bold text-white">1.4.1</span>
+                        <span class="text-sm font-bold text-white">1.4.2</span>
                     </div>
                     <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
                         <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-500 mb-1">Storage</span>
@@ -1075,6 +1075,34 @@
                 this.switchView(destination, false);
                 this.isHandlingHistory = false;
                 this.resetBackTrap();
+            }
+
+            handleNativeBack() {
+                // Called directly by the Android Activity. Return true when AniDiary
+                // consumed the Back press; return false only at the dashboard root so
+                // Android can leave the app normally.
+                if (this.modalHistoryActive) {
+                    const type = this.modalHistoryType;
+                    this.isHandlingHistory = true;
+                    this.modalHistoryActive = false;
+                    this.modalHistoryType = null;
+
+                    if (type === 'anime') this.closeAnimeModal();
+                    else if (type === 'help') this.closeHelpGuide();
+                    else if (type === 'journey-log') this.closeJourneyLogModal();
+                    else if (type === 'confirm') this.closeConfirmModal(true);
+
+                    this.isHandlingHistory = false;
+                    return true;
+                }
+
+                const destination = this.getBackDestination();
+                if (!destination) return false;
+
+                this.isHandlingHistory = true;
+                this.switchView(destination, false);
+                this.isHandlingHistory = false;
+                return true;
             }
 
             resetBackTrap() {
@@ -2275,35 +2303,24 @@
                     this.animeList.forEach(anime => { this.ensureStructuredEntries(anime); this.syncLegacyStructure(anime); });
                     const data = {
                         app: 'AniDiary',
-                        version: '1.4.1',
+                        version: '1.4.2',
                         exportedAt: new Date().toISOString(),
                         anime: this.animeList
                     };
 
                     const jsonStr = JSON.stringify(data, null, 2);
                     const filename = `AniDiary_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-                    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
 
-                    // Android WebView may not honor <a download>. Prefer the Android/browser
-                    // share sheet when available, then fall back to the normal download path.
-                    if (typeof File !== 'undefined' && navigator.share) {
-                        const file = new File([blob], filename, { type: 'application/json' });
-                        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
-                            try {
-                                await navigator.share({
-                                    title: 'AniDiary Backup',
-                                    text: 'AniDiary JSON backup',
-                                    files: [file]
-                                });
-                                this.showToast('Backup exported successfully!');
-                                return;
-                            } catch (shareErr) {
-                                if (shareErr && shareErr.name === 'AbortError') return;
-                                console.warn('Share export unavailable; using download fallback.', shareErr);
-                            }
-                        }
+                    // In the Android APK use the native Storage Access Framework. This
+                    // opens Android's standard "Save as" picker and writes the JSON file
+                    // to the exact location selected by the user.
+                    if (window.AndroidAniDiary && typeof window.AndroidAniDiary.exportBackup === 'function') {
+                        window.AndroidAniDiary.exportBackup(jsonStr, filename);
+                        return;
                     }
 
+                    // Browser fallback for the standalone HTML version.
+                    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
                     const objectUrl = URL.createObjectURL(blob);
                     const a = document.createElement('a');
                     a.href = objectUrl;
