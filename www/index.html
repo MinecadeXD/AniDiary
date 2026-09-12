@@ -37,6 +37,19 @@
         }
     </script>
     <style>
+        /* Edge-to-edge WebView cleanup: keep Android inset areas on the app background. */
+        html, body {
+            background: #0d0e15 !important;
+            min-height: 100%;
+            min-height: 100dvh;
+        }
+        body {
+            min-height: 100dvh;
+            overscroll-behavior-y: none;
+        }
+        .pb-safe {
+            padding-bottom: max(env(safe-area-inset-bottom), 0px);
+        }
         /* Custom scrollbar and glassmorphism styling */
         ::-webkit-scrollbar {
             width: 6px;
@@ -971,19 +984,19 @@
             }
 
             async init() {
-                // AniDiary uses a small navigation trap for the Android/browser Back button.
-                // Back is intentionally NOT treated as a normal history stack: each screen has
-                // a fixed destination so stale navigation history cannot send the user through
-                // unrelated screens.
-                if (!window.history.state || !window.history.state.aniDiary) {
-                    window.history.replaceState({ aniDiary: true, view: 'dashboard', animeId: null, modal: null }, '', window.location.href);
-                } else {
-                    window.history.replaceState({ aniDiary: true, view: this.currentView || 'dashboard', animeId: this.selectedAnimeId || null, modal: null }, '', window.location.href);
-                }
-                window.history.pushState({ aniDiary: true, view: this.currentView || 'dashboard', animeId: this.selectedAnimeId || null, modal: null, trap: true }, '', window.location.href);
+                // Keep one history entry behind the app so browser/WebView Back is handled
+                // by AniDiary instead of navigating away immediately.
+                const initialState = { aniDiary: true, view: 'dashboard', animeId: null, modal: null, root: true };
+                window.history.replaceState(initialState, '', window.location.href);
+                this.currentView = 'dashboard';
+                this.selectedAnimeId = null;
+                this.modalHistoryActive = false;
+                this.modalHistoryType = null;
+                window.history.pushState({ ...initialState, trap: true }, '', window.location.href);
 
-                window.onpopstate = () => {
-                    this.handleAppBack();
+                window.onpopstate = (event) => {
+                    if (this.isHandlingHistory) return;
+                    this.handleAppBack(event);
                 };
                 try {
                     await this.db.open();
@@ -1036,7 +1049,7 @@
                     : 'dashboard';
             }
 
-            handleAppBack() {
+            handleAppBack(event) {
                 // Modals behave like screens: Android Back closes the current modal first.
                 if (this.modalHistoryActive) {
                     const type = this.modalHistoryType;
@@ -1052,10 +1065,9 @@
 
                 const destination = this.getBackDestination();
                 if (!destination) {
-                    // Dashboard is the root of AniDiary. Let the Android/WebView back action
-                    // continue normally after removing our trap entry.
-                    this.isHandlingHistory = true;
-                    window.history.back();
+                    // Dashboard is the app root. Re-arm the trap instead of calling history.back()
+                    // recursively; that behavior can make some Android WebViews finish the Activity.
+                    this.resetBackTrap();
                     return;
                 }
 
@@ -2269,18 +2281,44 @@
                     };
 
                     const jsonStr = JSON.stringify(data, null, 2);
-                    const blob = new Blob([jsonStr], { type: 'application/json' });
                     const filename = `AniDiary_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+                    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
 
+                    // Android WebView may not honor <a download>. Prefer the Android/browser
+                    // share sheet when available, then fall back to the normal download path.
+                    if (typeof File !== 'undefined' && navigator.share) {
+                        const file = new File([blob], filename, { type: 'application/json' });
+                        if (!navigator.canShare || navigator.canShare({ files: [file] })) {
+                            try {
+                                await navigator.share({
+                                    title: 'AniDiary Backup',
+                                    text: 'AniDiary JSON backup',
+                                    files: [file]
+                                });
+                                this.showToast('Backup exported successfully!');
+                                return;
+                            } catch (shareErr) {
+                                if (shareErr && shareErr.name === 'AbortError') return;
+                                console.warn('Share export unavailable; using download fallback.', shareErr);
+                            }
+                        }
+                    }
+
+                    const objectUrl = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
+                    a.href = objectUrl;
                     a.download = filename;
+                    a.rel = 'noopener';
+                    a.style.display = 'none';
                     document.body.appendChild(a);
                     a.click();
-                    document.body.removeChild(a);
-
-                    this.showToast('Backup exported successfully!');
+                    setTimeout(() => {
+                        a.remove();
+                        URL.revokeObjectURL(objectUrl);
+                    }, 1000);
+                    this.showToast('Backup export started.');
                 } catch (err) {
+                    console.error(err);
                     this.showToast('Failed to export backup.', 'error');
                 }
             }
