@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AniDiary</string>
+    <string name="title_activity_main">AniDiary</string>
+    <string name="package_name">com.minecade.anidiary</string>
+    <string name="custom_url_scheme">com.minecade.anidiary</string>
+</resources>
