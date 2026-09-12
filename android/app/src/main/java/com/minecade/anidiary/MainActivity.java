@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.graphics.Color;
+import android.view.View;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 
@@ -28,9 +30,9 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // AniDiary is designed as a full-screen app. Hide Android's grey status and
-        // navigation bars, but allow them to appear temporarily with an edge swipe.
-        enableImmersiveMode();
+        // Keep Android's status/navigation bars visible, but blend them into
+        // AniDiary's dark UI instead of showing the default grey bars.
+        configureSystemBars();
 
         createBackupDocumentLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
@@ -80,31 +82,37 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
-        enableImmersiveMode();
+        configureSystemBars();
     }
 
-    @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) enableImmersiveMode();
-    }
+    private void configureSystemBars() {
+        // Let Android lay out the WebView between the system bars. This keeps the
+        // status/navigation bars visible, like a normal Android app.
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), true);
 
-    private void enableImmersiveMode() {
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+        int darkBackground = Color.parseColor("#0d0e15");
+        getWindow().setStatusBarColor(darkBackground);
+        getWindow().setNavigationBarColor(darkBackground);
+
+        WindowInsetsControllerCompat controller =
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
         if (controller != null) {
-            controller.hide(WindowInsetsCompat.Type.statusBars() | WindowInsetsCompat.Type.navigationBars());
-            controller.setSystemBarsBehavior(
-                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            );
+            // White Android icons/text on the dark bars.
+            controller.setAppearanceLightStatusBars(false);
+            controller.setAppearanceLightNavigationBars(false);
         }
 
-        // Avoid Android adding a contrast/scrim background when the navigation bar
-        // temporarily appears.
+        // Disable Android's automatic contrast scrims so the bars stay the same
+        // dark colour as the AniDiary background.
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             getWindow().setNavigationBarContrastEnforced(false);
             getWindow().setStatusBarContrastEnforced(false);
+            getWindow().setNavigationBarDividerColor(darkBackground);
         }
+
+        // Make sure the decor view is allowed to use the normal system-window
+        // insets rather than immersive/full-screen mode.
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_VISIBLE);
     }
 
     private void handleAniDiaryBack() {
