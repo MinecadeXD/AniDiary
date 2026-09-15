@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="en" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AniDiary - Anime Journey Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dark: {
+                            50: '#1a1d2d',
+                            100: '#131525',
+                            200: '#0d0e15',
+                            card: '#16192b',
+                            cardBorder: '#232840'
+                        },
+                        accent: {
+                            purple: '#8b5cf6',
+                            blue: '#3b82f6',
+                            pink: '#ec4899',
+                            purpleGlow: 'rgba(139, 92, 246, 0.15)',
+                            pinkGlow: 'rgba(236, 72, 153, 0.15)'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Overall AniDiary background gradient. */
+        html, body {
+            background:
+                radial-gradient(circle at 12% 8%, rgba(124, 58, 237, 0.20), transparent 34%),
+                radial-gradient(circle at 88% 18%, rgba(236, 72, 153, 0.14), transparent 32%),
+                radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.10), transparent 38%),
+                #0d0e15 !important;
+            background-attachment: fixed;
+            min-height: 100%;
+            min-height: 100dvh;
+        }
+        body {
+            min-height: 100dvh;
+            overscroll-behavior-y: none;
+        }
+        .pb-safe {
+            padding-bottom: max(env(safe-area-inset-bottom), 0px);
+        }
+        /* Custom scrollbar and glassmorphism styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0d0e15;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232840;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6;
+        }
+        .glass-panel {
+            background: rgba(22, 25, 43, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glass-nav {
+            background: rgba(13, 14, 21, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .text-gradient {
+            background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 38%, #f472b6 72%, #fb7185 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .icon-gradient {
+            background: linear-gradient(135deg, rgba(139,92,246,.28), rgba(236,72,153,.20));
+            border: 1px solid rgba(196,181,253,.16);
+            box-shadow: 0 8px 24px rgba(109,40,217,.14), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        .icon-gradient-blue {
+            background: linear-gradient(135deg, rgba(59,130,246,.25), rgba(139,92,246,.18));
+            border: 1px solid rgba(96,165,250,.16);
+            box-shadow: 0 8px 24px rgba(37,99,235,.12), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        .icon-gradient-pink {
+            background: linear-gradient(135deg, rgba(236,72,153,.25), rgba(244,114,182,.16));
+            border: 1px solid rgba(244,114,182,.16);
+            box-shadow: 0 8px 24px rgba(190,24,93,.12), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        .icon-gradient-green {
+            background: linear-gradient(135deg, rgba(16,185,129,.23), rgba(34,197,94,.14));
+            border: 1px solid rgba(52,211,153,.15);
+            box-shadow: 0 8px 24px rgba(5,150,105,.11), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        .gradient-surface {
+            background: linear-gradient(145deg, rgba(30,27,75,.78), rgba(22,25,43,.78) 45%, rgba(49,24,52,.68));
+            border-color: rgba(167,139,250,.16);
+        }
+        .gradient-button {
+            background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 45%, #ec4899 100%);
+            box-shadow: 0 10px 28px rgba(124,58,237,.22);
+        }
+        .gradient-button:hover {
+            background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 45%, #f472b6 100%);
+            box-shadow: 0 12px 32px rgba(168,85,247,.28);
+        }
+        .glow-icon {
+            filter: drop-shadow(0 0 7px rgba(167,139,250,.28));
+        }
+        .interactive-icon {
+            transition: transform .2s ease, filter .2s ease;
+        }
+        .stat-card {
+            position: relative;
+            isolation: isolate;
+            transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: -1;
+            opacity: .78;
+            pointer-events: none;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        .stat-total::before { background: linear-gradient(135deg, rgba(124,58,237,.26), rgba(59,130,246,.10) 55%, transparent); }
+        .stat-unwatched::before { background: linear-gradient(135deg, rgba(6,182,212,.22), rgba(14,165,233,.08) 55%, transparent); }
+        .stat-watching::before { background: linear-gradient(135deg, rgba(236,72,153,.23), rgba(168,85,247,.10) 55%, transparent); }
+        .stat-completed::before { background: linear-gradient(135deg, rgba(16,185,129,.24), rgba(234,179,8,.09) 55%, transparent); }
+        .stat-icon-total { background: linear-gradient(135deg, rgba(139,92,246,.38), rgba(59,130,246,.22)); color: #c4b5fd; border: 1px solid rgba(167,139,250,.24); box-shadow: 0 10px 28px rgba(109,40,217,.18), inset 0 1px 0 rgba(255,255,255,.08); }
+        .stat-icon-unwatched { background: linear-gradient(135deg, rgba(6,182,212,.34), rgba(14,165,233,.20)); color: #a5f3fc; border: 1px solid rgba(103,232,249,.22); box-shadow: 0 10px 28px rgba(8,145,178,.16), inset 0 1px 0 rgba(255,255,255,.08); }
+        .stat-icon-watching { background: linear-gradient(135deg, rgba(236,72,153,.34), rgba(168,85,247,.22)); color: #fbcfe8; border: 1px solid rgba(244,114,182,.22); box-shadow: 0 10px 28px rgba(190,24,93,.16), inset 0 1px 0 rgba(255,255,255,.08); }
+        .stat-icon-completed { background: linear-gradient(135deg, rgba(16,185,129,.34), rgba(234,179,8,.18)); color: #a7f3d0; border: 1px solid rgba(52,211,153,.22); box-shadow: 0 10px 28px rgba(5,150,105,.16), inset 0 1px 0 rgba(255,255,255,.08); }
+        .brand-mark {
+            background: linear-gradient(145deg, #4c1d95 0%, #7c3aed 45%, #ec4899 100%);
+            box-shadow: 0 12px 30px rgba(124,58,237,.28), inset 0 1px 0 rgba(255,255,255,.18);
+        }
+        button:hover .interactive-icon, .group:hover .interactive-icon {
+            transform: translateY(-1px) scale(1.06);
+            filter: drop-shadow(0 0 8px rgba(236,72,153,.25));
+        }
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 1rem);
+        }
+        /* Hide scrollbars for clean tag pill lists */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+.anime-card-details{margin-top:-30px;position:relative;padding-top:38px!important;background:linear-gradient(to bottom,rgba(13,14,21,.98) 0%,rgba(13,14,21,.94) 38%,rgba(13,14,21,.98) 72%,rgba(13,14,21,1) 100%);}
+
+        /* Keep the existing AniDiary background visually fixed while long content scrolls. */
+        body.long-scroll-background {
+            position: relative;
+            isolation: isolate;
+            background: #0d0e15 !important;
+        }
+        body.long-scroll-background::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -20;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(124, 58, 237, 0.20), transparent 34%),
+                radial-gradient(circle at 88% 18%, rgba(236, 72, 153, 0.14), transparent 32%),
+                radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.10), transparent 38%),
+                #0d0e15;
+            background-repeat: no-repeat;
+            background-size: 100% 100%;
+        }
+
+        /* Landscape phone fixes: compact navigation and guarantee full-page scrolling. */
+        /* Keep the bottom navigation compact on landscape phones, including Android WebView.
+           Use an explicit height so WebView cannot expand it to the portrait-sized bar. */
+        @media (orientation: landscape) and (max-height: 700px) {
+            nav.fixed.bottom-0 { height: 50px !important; min-height: 50px !important; box-sizing: border-box !important; padding: 0 !important; }
+            nav.fixed.bottom-0 > div { height: 50px !important; min-height: 50px !important; box-sizing: border-box !important; }
+            nav.fixed.bottom-0 .nav-btn { height: 50px !important; min-height: 50px !important; box-sizing: border-box !important; padding: 0 0.35rem !important; }
+            nav.fixed.bottom-0 .nav-btn { justify-content: center !important; align-items: center !important; gap: 1px !important; }
+            nav.fixed.bottom-0 .nav-btn i { width: 1.2rem !important; height: 1.2rem !important; }
+            nav.fixed.bottom-0 .nav-btn span { font-size: 0.55rem !important; margin-top: 0.05rem !important; line-height: 1 !important; }
+            main { padding-bottom: 4.8rem !important; }
+            .view-section { padding-bottom: 1rem !important; }
+            #continue-watching-list > div { min-height: 6.6rem !important; }
+            #journey-timeline-container { padding-bottom: 1rem !important; }
+        }
+        @media (orientation: landscape) and (max-height: 600px) {
+            main { padding-bottom: 5.25rem !important; }
+            .view-section { padding-bottom: 1rem !important; }
+            nav.fixed.bottom-0 { padding: 0.18rem 0.5rem 0.2rem !important; }
+            nav.fixed.bottom-0 > div { gap: 0.25rem !important; }
+            nav.fixed.bottom-0 .nav-btn { padding: 0.18rem 0.35rem !important; border-radius: 0.7rem !important; }
+            nav.fixed.bottom-0 .nav-btn i { width: 1.35rem !important; height: 1.35rem !important; }
+            nav.fixed.bottom-0 .nav-btn span { font-size: 0.58rem !important; margin-top: 0.08rem !important; line-height: 1 !important; }
+            #continue-watching-list > div { min-height: 6.6rem !important; }
+            #journey-timeline-container { padding-bottom: 1rem !important; }
+        }
+        @media (orientation: landscape) and (max-height: 480px) {
+            main { padding-bottom: 4.8rem !important; }
+            nav.fixed.bottom-0 { padding-top: 0.1rem !important; padding-bottom: 0.12rem !important; }
+            nav.fixed.bottom-0 .nav-btn { padding-top: 0.1rem !important; padding-bottom: 0.1rem !important; }
+            nav.fixed.bottom-0 .nav-btn i { width: 1.15rem !important; height: 1.15rem !important; }
+            nav.fixed.bottom-0 .nav-btn span { font-size: 0.52rem !important; }
+        }
+</style>
+</head>
+<body class="bg-[#0d0e15] text-slate-100 font-sans antialiased h-full flex flex-col min-h-screen select-none overflow-x-hidden">
+
+    <!-- Ambient Background Glows -->
+    <div class="fixed top-0 left-1/4 w-96 h-96 bg-purple-900/25 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="fixed top-1/3 -right-20 w-80 h-80 bg-fuchsia-900/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="fixed bottom-1/3 right-10 w-96 h-96 bg-pink-900/20 rounded-full blur-3xl pointer-events-none -z-10"></div>
+    <div class="fixed -bottom-24 left-10 w-80 h-80 bg-indigo-900/15 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+    <!-- Top Mobile / Desktop Header -->
+    <header id="app-top-header" class="sticky top-0 z-30 glass-panel border-b border-white/5 px-4 py-3 sm:px-6 flex items-center justify-between">
+        <div class="flex items-center space-x-3 cursor-pointer" onclick="app.switchView('dashboard')">
+            <div class="w-10 h-10 rounded-xl brand-mark flex items-center justify-center ring-1 ring-white/10">
+                <svg class="w-7 h-7 text-white glow-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="AniDiary open book icon">
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3 6.1519V19.3095C3.99197 18.8639 5.40415 18.4 7 18.4C8.58915 18.4 9.9999 18.8602 11 19.3094V6.1519C10.7827 6.02653 10.4894 5.8706 10.1366 5.71427C9.31147 5.34869 8.20352 5 7 5C5.26385 5 3.74016 5.72499 3 6.1519ZM13 6.1519V19.3578C13.9977 18.9353 15.41 18.5 17 18.5C18.596 18.5 20.0095 18.9383 21 19.3578V6.1519C20.2598 5.72499 18.7362 5 17 5C15.7965 5 14.6885 5.34869 13.8634 5.71427C13.5106 5.8706 13.2173 6.02653 13 6.1519ZM12 4.41985C11.7302 4.26422 11.3734 4.07477 10.9468 3.88572C9.96631 3.45131 8.57426 3 7 3C4.69187 3 2.76233 3.97065 1.92377 4.46427C1.30779 4.82687 1 5.47706 1 6.11223V20.0239C1 20.6482 1.36945 21.1206 1.79531 21.3588C2.21653 21.5943 2.78587 21.6568 3.30241 21.3855C4.12462 20.9535 5.48348 20.4 7 20.4C8.90549 20.4 10.5523 21.273 11.1848 21.6619C11.6757 21.9637 12.2968 21.9725 12.7959 21.6853C13.4311 21.32 15.0831 20.5 17 20.5C18.5413 20.5 19.9168 21.0305 20.7371 21.4366C21.6885 21.9075 23 21.2807 23 20.0593V6.11223C23 5.47706 22.6922 4.82687 22.0762 4.46427C21.2377 3.97065 19.3081 3 17 3C15.4257 3 14.0337 3.45131 13.0532 3.88572C12.6266 4.07477 12.2698 4.26422 12 4.41985Z" fill="currentColor"/>
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold tracking-wider text-gradient leading-none">AniDiary</h1>
+                <span class="text-[10px] text-slate-400 font-medium tracking-widest uppercase">Anime Journey Tracker</span>
+            </div>
+        </div>
+
+        <!-- Quick Add Button -->
+        <button id="btn-quick-add" onclick="app.openAnimeModal()" class="gradient-button flex items-center space-x-1.5 text-white px-3.5 py-2 rounded-xl text-sm font-semibold transition active:scale-95">
+            <i data-lucide="plus" class="w-4 h-4"></i>
+            <span class="hidden sm:inline">Add Anime</span>
+        </button>
+    </header>
+
+    <!-- Main View Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-5 sm:px-6 pb-32 md:pb-8 mb-0 md:mb-8">
+
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="view-section space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800/80 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Dashboard Overview</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Your personal anime statistics and active watch list</p>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <!-- Stat 1: Total -->
+                <div onclick="app.filterByStatus('ALL')" class="glass-panel stat-card stat-total p-4 rounded-2xl border border-violet-500/20 flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:border-violet-400/50 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Total Anime</span>
+                        <div class="w-11 h-11 rounded-2xl stat-icon-total flex items-center justify-center">
+                            <i data-lucide="library-big" class="w-5.5 h-5.5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-total" class="text-3xl sm:text-4xl font-extrabold text-violet-100">0</span>
+                    </div>
+                </div>
+
+                <!-- Stat 2: Unwatched -->
+                <div onclick="app.filterByStatus('Unwatched')" class="glass-panel stat-card stat-unwatched p-4 rounded-2xl border border-cyan-500/20 flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:border-cyan-400/50 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Unwatched</span>
+                        <div class="w-11 h-11 rounded-2xl stat-icon-unwatched flex items-center justify-center">
+                            <i data-lucide="eye-off" class="w-5.5 h-5.5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-unwatched" class="text-3xl sm:text-4xl font-extrabold text-cyan-100">0</span>
+                    </div>
+                </div>
+
+                <!-- Stat 3: Watching -->
+                <div onclick="app.filterByStatus('Watching')" class="glass-panel stat-card stat-watching p-4 rounded-2xl border border-pink-500/20 flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:border-pink-400/50 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Watching</span>
+                        <div class="w-11 h-11 rounded-2xl stat-icon-watching flex items-center justify-center">
+                            <i data-lucide="clapperboard" class="w-5.5 h-5.5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-watching" class="text-3xl sm:text-4xl font-extrabold text-pink-200">0</span>
+                    </div>
+                </div>
+
+                <!-- Stat 4: Completed -->
+                <div onclick="app.filterByStatus('Completed')" class="glass-panel stat-card stat-completed p-4 rounded-2xl border border-emerald-500/20 flex flex-col justify-between relative overflow-hidden group cursor-pointer hover:border-emerald-400/50 transition">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Completed</span>
+                        <div class="w-11 h-11 rounded-2xl stat-icon-completed flex items-center justify-center">
+                            <i data-lucide="trophy" class="w-5.5 h-5.5"></i>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <span id="stat-completed" class="text-3xl sm:text-4xl font-extrabold text-emerald-200">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continue Watching -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <i data-lucide="play-circle" class="w-5 h-5 text-blue-400"></i>
+                            Continue Watching
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Pick up where you left off</p>
+                    </div>
+                    <button onclick="app.filterByStatus('Watching')" class="text-xs font-semibold text-purple-300 hover:text-white transition">View All</button>
+                </div>
+                <div id="continue-watching-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"></div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: MY ANIME LIBRARY -->
+        <section id="view-library" class="view-section space-y-4 hidden">
+            <!-- Filter & Search Controls Bar -->
+            <div class="glass-panel p-3.5 rounded-2xl border border-slate-800/80 space-y-3">
+                <div class="flex flex-col sm:flex-row gap-2.5">
+                    <!-- Search Input -->
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input type="text" id="library-search" oninput="app.handleSearch(this.value)" placeholder="Search anime title or tags..." class="w-full bg-slate-900/80 border border-slate-700/60 text-slate-100 pl-9 pr-8 py-2 rounded-xl text-sm focus:outline-none focus:border-purple-500 transition">
+                        <button id="search-clear-btn" onclick="app.clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white">
+                            <i data-lucide="x-circle" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+
+                    <!-- Filter & Sort Selects -->
+                    <div class="flex items-center gap-2">
+                        <!-- Watch Status Filter -->
+                        <select id="filter-watch" onchange="app.renderLibrary()" class="bg-slate-900/80 border border-slate-700/60 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500">
+                            <option value="ALL">Watch: All</option>
+                            <option value="Unwatched">Unwatched</option>
+                            <option value="Watching">Watching</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+
+                        <!-- Release Status Filter -->
+                        <select id="filter-release" onchange="app.renderLibrary()" class="bg-slate-900/80 border border-slate-700/60 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500">
+                            <option value="ALL">Release: All</option>
+                            <option value="Complete">Complete</option>
+                            <option value="Ongoing">Ongoing</option>
+                        </select>
+
+                        <!-- Anime Type Filter -->
+                        <select id="filter-type" onchange="app.renderLibrary()" class="bg-slate-900/80 border border-slate-700/60 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500">
+                            <option value="ALL">Type: All</option>
+                            <option value="Series">Series</option>
+                            <option value="Movie">Movie</option>
+                        </select>
+
+                        <!-- Sort Menu -->
+                        <select id="sort-order" onchange="app.renderLibrary()" class="bg-slate-900/80 border border-slate-700/60 text-slate-200 text-xs rounded-xl px-3 py-2 focus:outline-none focus:border-purple-500">
+                            <option value="recently_added">Sort: Recent</option>
+                            <option value="recently_modified">Sort: Modified</option>
+                            <option value="a_z">Title A → Z</option>
+                            <option value="z_a">Title Z → A</option>
+                            <option value="rating_high">Highest Rated</option>
+                            <option value="rating_low">Lowest Rated</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Custom Tag Filters Pills Row -->
+                <div id="library-tags-container" class="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 text-xs no-scrollbar">
+                    <!-- Tag buttons populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Anime Grid Container -->
+            <div id="library-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 sm:gap-4">
+                <!-- Dynamically populated cards -->
+            </div>
+
+            <!-- Empty State for Library -->
+            <div id="library-empty-state" class="hidden glass-panel rounded-2xl p-8 text-center border border-slate-800 my-8 space-y-3">
+                <div class="w-12 h-12 rounded-full bg-purple-500/10 text-purple-400 flex items-center justify-center mx-auto">
+                    <i data-lucide="compass" class="w-6 h-6"></i>
+                </div>
+                <h3 id="empty-state-title" class="text-base font-semibold text-white">Your anime journey starts here</h3>
+                <p id="empty-state-desc" class="text-xs text-slate-400 max-w-sm mx-auto">Add your first anime to begin tracking seasons, ratings, and timeline memories.</p>
+                <button onclick="app.openAnimeModal()" class="inline-flex items-center space-x-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition mt-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Add Anime</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- VIEW 3: ANIME DETAIL SCREEN -->
+        <section id="view-details" class="view-section space-y-5 hidden pb-24">
+            <!-- Back Action Header -->
+            <div class="flex items-center justify-between pb-2">
+                <button onclick="app.switchView('library')" class="inline-flex items-center space-x-2 text-xs font-semibold text-slate-300 bg-slate-800/80 hover:bg-slate-700/80 px-3 py-2 rounded-xl border border-slate-700/50 transition">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                    <span>Back to Library</span>
+                </button>
+                <div class="flex items-center space-x-2">
+                    <button id="btn-edit-details" onclick="app.editCurrentAnime()" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 border border-slate-700/50 transition" title="Edit Anime Structure">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                    </button>
+                    <button id="btn-delete-details" onclick="app.confirmDeleteAnime()" class="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition" title="Delete Anime">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Detail Hero Banner / Card -->
+            <div id="detail-hero-card" class="glass-panel rounded-2xl overflow-hidden border border-slate-800 relative">
+                <div class="p-4 sm:p-6 flex flex-col sm:flex-row gap-5 items-start">
+                    <!-- Poster -->
+                    <div class="w-36 sm:w-48 aspect-[2/3] rounded-xl overflow-hidden bg-slate-900 border border-slate-700/60 shadow-2xl flex-shrink-0 mx-auto sm:mx-0">
+                        <img id="detail-poster" src="" alt="Anime Poster" class="w-full h-full object-cover">
+                    </div>
+
+                    <!-- Info Column -->
+                    <div class="flex-1 space-y-3.5 w-full">
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2 mb-2">
+                                <span id="detail-badge-watch" class="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-md border"></span>
+                                <span id="detail-badge-release" class="text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-md border"></span>
+                            </div>
+                            <h2 id="detail-title" class="text-2xl sm:text-3xl font-bold text-white tracking-tight"></h2>
+                        </div>
+
+                        <!-- 10-Star Rating Visual Container -->
+                        <div class="space-y-1">
+                            <span class="text-[10px] uppercase font-semibold text-slate-400">Personal Rating</span>
+                            <div id="detail-stars-container" class="flex items-center space-x-1"></div>
+                        </div>
+
+                        <!-- Tags Row -->
+                        <div id="detail-tags" class="flex flex-wrap gap-1.5 pt-1"></div>
+
+                        <!-- Notes Section -->
+                        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 mt-2">
+                            <span class="text-[10px] uppercase font-semibold text-slate-400 flex items-center space-x-1 mb-1">
+                                <i data-lucide="file-text" class="w-3 h-3"></i>
+                                <span>Personal Notes</span>
+                            </span>
+                            <p id="detail-notes" class="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed italic">No notes added.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DIRECT INTERACTIVE SEASONS & PARTS TRACKING PANEL -->
+            <div class="glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                    <div>
+                        <h3 class="text-base font-bold text-white flex items-center space-x-2">
+                            <i data-lucide="layers-3" class="w-5 h-5 text-purple-300 glow-icon"></i>
+                            <span>Seasons & Parts Tracking</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Tap any season or part below to toggle status directly</p>
+                    </div>
+                    <span id="detail-season-count-badge" class="text-xs bg-purple-500/10 text-purple-300 px-2.5 py-1 rounded-lg border border-purple-500/20 font-medium"></span>
+                </div>
+
+                <!-- Interactive Seasons List -->
+                <div id="detail-seasons-container" class="space-y-3">
+                    <!-- Season cards injected here with interactive buttons -->
+                </div>
+            </div>
+
+            <!-- Journey Log Section for this specific anime -->
+            <div class="glass-panel rounded-2xl p-4 sm:p-6 border border-slate-800 space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 gap-3">
+                    <h3 class="text-base font-bold text-white flex items-center space-x-2">
+                        <i data-lucide="sparkles" class="w-5 h-5 text-pink-300 glow-icon"></i>
+                        <span>Journey Timeline Logs</span>
+                    </h3>
+                    <button type="button" onclick="app.openJourneyLogModal()" class="shrink-0 inline-flex items-center space-x-1.5 text-[11px] text-pink-300 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/20 px-2.5 py-1.5 rounded-lg font-semibold transition">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i><span>Add / Edit Logs</span>
+                    </button>
+                </div>
+                <div id="detail-journey-events" class="space-y-2">
+                    <!-- Event logs -->
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: JOURNEY TIMELINE VIEW -->
+        <section id="view-journey" class="view-section space-y-6 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Anime Journey Timeline</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Your chronological history of completed & started anime</p>
+                </div>
+            </div>
+
+            <!-- Timeline Container -->
+            <div id="journey-timeline-container" class="relative border-l-2 border-purple-500/30 pl-4 sm:pl-6 ml-2 sm:ml-4 space-y-8">
+                <!-- Grouped timeline entries injected dynamically -->
+            </div>
+
+            <!-- Empty State for Journey -->
+            <div id="journey-empty-state" class="hidden glass-panel rounded-2xl p-8 text-center border border-slate-800 my-8 space-y-3">
+                <div class="w-12 h-12 rounded-full bg-pink-500/10 text-pink-400 flex items-center justify-center mx-auto">
+                    <i data-lucide="history" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-base font-semibold text-white">No Journey Logs Recorded</h3>
+                <p class="text-xs text-slate-400 max-w-sm mx-auto">Add journey logs from an anime's Details screen to build your personal timeline history.</p>
+            </div>
+        </section>
+
+        <!-- VIEW 5: SETTINGS & BACKUP -->
+        <section id="view-settings" class="view-section space-y-6 hidden">
+            <div class="border-b border-slate-800/80 pb-4">
+                <h2 class="text-2xl font-bold text-white tracking-tight">Settings & Data Management</h2>
+                <p class="text-xs text-slate-400 mt-0.5">Backup, restore, or manage your personal AniDiary database</p>
+            </div>
+
+            <!-- Backup & Restore Box -->
+            <div class="glass-panel p-5 sm:p-6 rounded-2xl border border-slate-800/80 space-y-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20">
+                        <i data-lucide="database" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Backup & Restore</h3>
+                        <p class="text-xs text-slate-400">Export your complete JSON database or restore from a backup file.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    <!-- Export Button -->
+                    <button onclick="app.exportBackup()" class="flex items-center justify-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60 p-3 rounded-xl font-medium text-xs transition">
+                        <i data-lucide="download" class="w-4 h-4 text-purple-400"></i>
+                        <span>Export Backup File (JSON)</span>
+                    </button>
+
+                    <!-- Import Button -->
+                    <label class="flex items-center justify-center space-x-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60 p-3 rounded-xl font-medium text-xs transition cursor-pointer">
+                        <i data-lucide="upload" class="w-4 h-4 text-pink-400"></i>
+                        <span>Import Backup File</span>
+                        <input type="file" id="import-file-input" accept=".json" onchange="app.importBackup(event)" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Danger Zone -->
+            <div class="glass-panel p-5 sm:p-6 rounded-2xl border border-red-500/20 bg-red-950/10 space-y-4">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/20">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-white">Clear All Data</h3>
+                        <p class="text-xs text-slate-400">Permanently delete all anime records and journey logs from this device.</p>
+                    </div>
+                </div>
+
+                <button onclick="app.confirmClearAllData()" class="w-full sm:w-auto bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 font-semibold text-xs px-4 py-2.5 rounded-xl transition">
+                    Clear Database Entirely
+                </button>
+            </div>
+
+            <!-- Help Guide -->
+            <button type="button" onclick="app.openHelpGuide()" class="w-full glass-panel p-4 rounded-2xl border border-slate-800/80 flex items-center gap-3 text-left hover:border-purple-500/40 transition">
+                <div class="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center border border-purple-500/20 shrink-0">
+                    <i data-lucide="circle-help" class="w-5 h-5"></i>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <h3 class="text-sm font-bold text-white">Help Guide</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Learn how to use AniDiary and track your anime journey.</p>
+                </div>
+                <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 shrink-0"></i>
+            </button>
+
+            <!-- App Information -->
+            <div class="glass-panel p-5 sm:p-6 rounded-2xl border border-slate-800/80">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-purple-600/20 to-pink-500/20 text-purple-300 border border-purple-500/20 flex items-center justify-center shrink-0">
+                        <i data-lucide="info" class="w-5 h-5"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="text-base font-bold text-white">About AniDiary</h3>
+                        <p class="text-[11px] text-slate-400">Application information</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                        <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-500 mb-1">Version</span>
+                        <span class="text-sm font-bold text-white">1.4.2</span>
+                    </div>
+                    <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-3">
+                        <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-500 mb-1">Storage</span>
+                        <span class="text-sm font-bold text-white">Offline</span>
+                    </div>
+                </div>
+                <div class="mt-2.5 bg-slate-900/70 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-purple-600/20 to-pink-500/20 text-purple-300 border border-purple-500/20 flex items-center justify-center shrink-0">
+                        <i data-lucide="code-2" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-500 mb-0.5">Developer</span>
+                        <span class="text-sm font-bold text-white">Developed by Minecade</span>
+                    </div>
+                </div>
+                <p class="text-[11px] leading-relaxed text-slate-400 mt-3">Standalone personal anime journey tracker with ratings, interactive season tracking, journey logs, and local data storage.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="fixed bottom-0 left-0 right-0 z-30 glass-nav px-3 py-3 pb-safe border-t border-white/5">
+        <div class="max-w-2xl mx-auto grid grid-cols-4 gap-2 sm:gap-5">
+            <button onclick="app.switchView('dashboard')" id="nav-dashboard" class="nav-btn flex flex-col items-center justify-center py-2.5 px-3 sm:px-6 rounded-xl text-slate-400 hover:text-white transition">
+                <i data-lucide="layout-dashboard" class="w-7 h-7"></i>
+                <span class="text-[11px] mt-1.5 font-medium">Dashboard</span>
+            </button>
+            <button onclick="app.switchView('library')" id="nav-library" class="nav-btn flex flex-col items-center justify-center py-2.5 px-3 sm:px-6 rounded-xl text-slate-400 hover:text-white transition">
+                <i data-lucide="library" class="w-7 h-7"></i>
+                <span class="text-[11px] mt-1.5 font-medium">My Anime</span>
+            </button>
+            <button onclick="app.switchView('journey')" id="nav-journey" class="nav-btn flex flex-col items-center justify-center py-2.5 px-3 sm:px-6 rounded-xl text-slate-400 hover:text-white transition">
+                <i data-lucide="milestone" class="w-7 h-7"></i>
+                <span class="text-[11px] mt-1.5 font-medium">Journey</span>
+            </button>
+            <button onclick="app.switchView('settings')" id="nav-settings" class="nav-btn flex flex-col items-center justify-center py-2.5 px-3 sm:px-6 rounded-xl text-slate-400 hover:text-white transition">
+                <i data-lucide="settings" class="w-7 h-7"></i>
+                <span class="text-[11px] mt-1.5 font-medium">Settings</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MODAL: ADD / EDIT ANIME -->
+    <div id="modal-anime" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden overflow-y-auto">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl border border-slate-700/80 my-8 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+                <h3 id="modal-anime-title" class="text-lg font-bold text-white">Add Anime</h3>
+                <button onclick="app.closeAnimeModal()" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Form Content -->
+            <form id="form-anime" onsubmit="app.saveAnimeForm(event)" class="p-5 overflow-y-auto space-y-4 text-xs">
+                <input type="hidden" id="anime-id">
+
+                <!-- Title Input -->
+                <div class="space-y-1">
+                    <label class="font-semibold text-slate-300">Anime Title <span class="text-red-400">*</span></label>
+                    <input type="text" id="input-title" required class="w-full bg-slate-900 border border-slate-700/80 text-white rounded-xl px-3 py-2.5 focus:border-purple-500 focus:outline-none">
+                </div>
+
+                <!-- Thumbnail Input (File Upload OR Image URL) -->
+                <div class="space-y-1.5">
+                    <label class="font-semibold text-slate-300">Thumbnail / Poster Image</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- File Upload -->
+                        <div class="flex items-center justify-center bg-slate-900 border border-slate-700/80 rounded-xl p-2 relative">
+                            <input type="file" id="input-file" accept="image/*" onchange="app.handleImageUpload(event)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full">
+                            <div class="flex items-center space-x-2 text-slate-400">
+                                <i data-lucide="image" class="w-4 h-4"></i>
+                                <span id="file-label-text">Choose Device Image</span>
+                            </div>
+                        </div>
+                        <!-- URL Input -->
+                        <input type="url" id="input-poster-url" onchange="app.handleImageUrlInput(this.value)" placeholder="OR Paste Image URL" class="bg-slate-900 border border-slate-700/80 text-white rounded-xl px-3 py-2 focus:border-purple-500 focus:outline-none">
+                    </div>
+                    <!-- Image Preview Area -->
+                    <div id="image-preview-container" class="hidden mt-2 flex items-center space-x-3 bg-slate-900/50 p-2 rounded-xl border border-slate-800">
+                        <img id="image-preview" src="" alt="Preview" class="w-12 h-16 object-cover rounded-md border border-slate-700">
+                        <span class="text-[11px] text-slate-400">Image selected successfully.</span>
+                        <button type="button" onclick="app.openImageCropFromPreview()" class="text-purple-300 hover:text-white bg-purple-500/10 border border-purple-500/20 rounded-lg px-2 py-1 text-[10px] font-semibold">Adjust</button>
+                        <button type="button" onclick="app.clearImagePreview()" class="text-red-400 ml-auto p-1"><i data-lucide="trash" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+
+                <!-- Status Selectors (Release vs Watch) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="font-semibold text-slate-300">Release Status</label>
+                        <select id="input-release-status" class="w-full bg-slate-900 border border-slate-700/80 text-white rounded-xl px-3 py-2.5 focus:border-purple-500 focus:outline-none">
+                            <option value="Complete">Complete (Finished Airing)</option>
+                            <option value="Ongoing">Ongoing (More Coming)</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-1">
+                        <label class="font-semibold text-slate-300">Overall Watch Status</label>
+                        <select id="input-watch-status" class="w-full bg-slate-900 border border-slate-700/80 text-white rounded-xl px-3 py-2.5 focus:border-purple-500 focus:outline-none">
+                            <option value="Unwatched">Unwatched</option>
+                            <option value="Watching">Watching</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Dashboard Visibility -->
+                <div class="border-t border-slate-800 pt-3">
+                    <label class="flex items-center justify-between gap-4 bg-slate-900/70 border border-slate-800 rounded-xl p-3 cursor-pointer">
+                        <div>
+                            <span class="font-semibold text-slate-300 block">Show on Dashboard</span>
+                            <span class="text-[10px] text-slate-500 block mt-0.5">Turn this off to exclude this anime from the Continue Watching section without changing its watch status.</span>
+                        </div>
+                        <span class="relative inline-flex items-center shrink-0">
+                            <input type="checkbox" id="input-dashboard-visible" class="sr-only peer" checked>
+                            <span class="w-10 h-5 bg-slate-700 rounded-full peer-checked:bg-purple-600 transition"></span>
+                            <span class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5"></span>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- 10-STAR RATING SELECTOR (0.5 STEPS) -->
+                <div class="space-y-2 border-t border-slate-800 pt-3">
+                    <div class="flex items-center justify-between">
+                        <label class="font-semibold text-slate-300">Personal Rating</label>
+                        <div class="flex items-center space-x-2">
+                            <span id="rating-value-display" class="font-extrabold text-amber-400 text-sm">Unrated</span>
+                            <button type="button" onclick="app.setModalRating(null)" class="text-[10px] text-slate-500 hover:text-slate-300 underline">Clear</button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive 10 Stars Container -->
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col items-center justify-center space-y-2">
+                        <div id="interactive-stars-picker" class="flex items-center space-x-1 sm:space-x-1.5 cursor-pointer select-none">
+                            <!-- Injected by JS -->
+                        </div>
+                        <!-- Step Control Buttons -->
+                        <div class="flex items-center space-x-2 pt-1">
+                            <button type="button" onclick="app.adjustModalRating(-0.5)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-bold transition">- 0.5</button>
+                            <input type="number" id="input-rating-hidden" step="0.5" min="0" max="10" class="w-16 bg-slate-950 border border-slate-700 text-amber-400 font-bold text-center rounded-lg py-1 text-xs focus:outline-none" onchange="app.setModalRating(this.value)">
+                            <button type="button" onclick="app.adjustModalRating(0.5)" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-bold transition">+ 0.5</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom Tags -->
+                <div class="space-y-1">
+                    <label class="font-semibold text-slate-300">Custom Tags (comma separated)</label>
+                    <input type="text" id="input-tags" class="w-full bg-slate-900 border border-slate-700/80 text-white rounded-xl px-3 py-2.5 focus:border-purple-500 focus:outline-none">
+                </div>
+
+                <!-- Seasons, Movies & Parts Structural Editor -->
+                <div class="space-y-2 border-t border-slate-800 pt-3">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <label class="font-semibold text-slate-300">Seasons, Movies, OVAs & Parts</label>
+                            <p class="text-[10px] text-slate-400">Add seasons, movies and OVAs in any order. Movies and OVAs can be placed between seasons.</p>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="app.addSeasonField()" class="text-purple-400 hover:text-purple-300 font-semibold flex items-center space-x-1 text-[11px]">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                <span>Add Season</span>
+                            </button>
+                            <button type="button" onclick="app.addMovieField()" class="text-pink-400 hover:text-pink-300 font-semibold flex items-center space-x-1 text-[11px]">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                <span>Add Movie</span>
+                            </button>
+                            <button type="button" onclick="app.addOVAField()" class="text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1 text-[11px]">
+                                <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                                <span>Add OVA</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="form-seasons-container" class="space-y-2.5">
+                        <!-- Dynamic seasons and movies, kept in insertion order -->
+                    </div>
+                </div>
+
+                <!-- Notes TextArea -->
+                <div class="space-y-1 border-t border-slate-800 pt-3">
+                    <label class="font-semibold text-slate-300">Notes & Review</label>
+                    <textarea id="input-notes" rows="3" placeholder="Write any personal notes, recommendations or watching context..." class="w-full bg-slate-900 border border-slate-700/80 text-white rounded-xl p-3 focus:border-purple-500 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Modal Actions -->
+                <div class="pt-3 border-t border-slate-800 flex justify-end space-x-2">
+                    <button type="button" onclick="app.closeAnimeModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold shadow-lg shadow-purple-900/40 transition">Save Anime</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: POSTER CROP / ADJUST -->
+    <div id="modal-image-crop" class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md hidden overflow-y-auto">
+        <div class="glass-panel w-full max-w-md rounded-2xl border border-slate-700/80 overflow-hidden shadow-2xl">
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-bold text-white">Adjust Poster</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Drag the image and zoom to choose what appears.</p>
+                </div>
+                <button type="button" onclick="app.closeImageCrop(false)" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div id="image-crop-stage" class="mx-auto relative overflow-hidden rounded-xl border border-slate-700 bg-slate-950 shadow-inner touch-none" style="width:min(240px,70vw);aspect-ratio:2/3;">
+                    <canvas id="image-crop-canvas" class="absolute inset-0 w-full h-full touch-none"></canvas>
+                </div>
+                <div class="space-y-1.5">
+                    <div class="flex items-center justify-between text-[11px] text-slate-400">
+                        <span>Zoom</span><span id="image-crop-zoom-value">100%</span>
+                    </div>
+                    <input id="image-crop-zoom" type="range" min="1" max="3" step="0.01" value="1" class="w-full accent-purple-500">
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="app.closeImageCrop(false)" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs">Cancel</button>
+                    <button type="button" onclick="app.applyImageCrop()" class="px-5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs">Use This Crop</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: JOURNEY LOG EDITOR -->
+    <div id="modal-journey-log" class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden overflow-y-auto">
+        <div class="glass-panel w-full max-w-xl rounded-2xl border border-slate-700/80 my-8 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="text-lg font-bold text-white">Journey Timeline Logs</h3>
+                <button type="button" onclick="app.closeJourneyLogModal()" class="text-slate-400 hover:text-white p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-5 overflow-y-auto space-y-3">
+                <p class="text-[11px] text-slate-400">Choose a predefined milestone and set its date. You can add more than one log.</p>
+                <div id="journey-log-editor" class="space-y-2"></div>
+                <button type="button" onclick="app.addJourneyLogRow()" class="w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-500/15 to-pink-500/10 hover:from-purple-500/25 hover:to-pink-500/20 border border-purple-500/20 text-purple-200 py-2.5 rounded-xl font-semibold text-xs transition"><i data-lucide="plus" class="w-4 h-4"></i><span>Add Log</span></button>
+            </div>
+            <div class="px-5 py-4 border-t border-slate-800 flex justify-end gap-2">
+                <button type="button" onclick="app.closeJourneyLogModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-semibold text-xs transition">Cancel</button>
+                <button type="button" onclick="app.saveJourneyLogs()" class="px-5 py-2 rounded-xl bg-pink-600 hover:bg-pink-500 text-white font-semibold text-xs transition">Save Logs</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: HELP GUIDE -->
+    <div id="modal-help-guide" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden overflow-y-auto">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl border border-slate-700/80 my-6 overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+            <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between shrink-0">
+                <div>
+                    <h3 class="text-lg font-bold text-white">AniDiary Help Guide</h3>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Everything you need to know about using AniDiary.</p>
+                </div>
+                <button type="button" onclick="app.closeHelpGuide()" class="text-slate-400 hover:text-white p-1 rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-2.5">
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">🏠</span><span class="font-semibold text-sm text-white flex-1">Dashboard</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">See your Total Anime, Unwatched, Watching and Completed counts. Tap a stat card to open My Anime with that filter. Continue Watching shows anime currently marked Watching and whose Show on Dashboard setting is enabled.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">📚</span><span class="font-semibold text-sm text-white flex-1">My Anime: Search, Filters & Tags</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Browse your complete library. Search by anime title or tag, then filter by Watch Status (All, Unwatched, Watching, Completed), Release Status (All, Complete, Ongoing), or Anime Type (All, Series, Movie). Use the tag pills for quick filtering. Sort by Recently Added, Recently Modified, Title A → Z, Title Z → A, Highest Rated or Lowest Rated. Movie means an anime with only movies; Series means it has at least one season, including season + movie combinations.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">➕</span><span class="font-semibold text-sm text-white flex-1">Adding & Editing an Anime</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Tap Add Anime or edit an existing anime from its Details screen. You can set the title, poster, release status, overall watch status, dashboard visibility, personal rating, custom tags, seasons/movies/OVAs/parts, and notes.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">🖼️</span><span class="font-semibold text-sm text-white flex-1">Poster Images & Crop</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Choose a poster from your device or paste an image URL. After selecting an image, use Adjust to drag and zoom it inside the poster frame, then choose Use This Crop. You can also remove the selected image before saving.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">👁️</span><span class="font-semibold text-sm text-white flex-1">Show on Dashboard</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Each anime has a Show on Dashboard toggle. Turn it off to hide that anime from Continue Watching without changing its actual Watch Status. The Dashboard Watching count still includes every anime marked Watching.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">🎬</span><span class="font-semibold text-sm text-white flex-1">Seasons, Movies, OVAs & Parts</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Add seasons, movies and OVAs in any order. Movies and OVAs can be placed between seasons. Seasons can contain multiple named parts. Each season, movie, OVA and part keeps its own progress status, and the overall anime status is calculated from those entries. OVAs appear in Anime Details and progress tracking, but are not a separate library category and do not appear on anime cards.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">▶️</span><span class="font-semibold text-sm text-white flex-1">Direct Watch Progress</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">On Anime Details, tap Unwatched, Watching or Completed directly on a season, movie or OVA. Parts have their own status buttons. Completing a season also completes all of its parts; setting a season or part status updates the overall anime Watch Status automatically.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">▶️</span><span class="font-semibold text-sm text-white flex-1">Watch Status</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Unwatched means you have not started it, Watching means you are currently watching it, and Completed means all tracked entries are completed. The overall status is automatically recalculated from seasons, parts, movies and OVAs when their progress is changed.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">📺</span><span class="font-semibold text-sm text-white flex-1">Release Status</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Release status describes the anime itself, independently from your personal watch status. Complete means finished airing; Ongoing means more content is coming. You can be Completed while the anime is still Ongoing.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">⭐</span><span class="font-semibold text-sm text-white flex-1">Personal Rating</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Rate an anime from 0 to 10 in 0.5-point steps. Click the stars or use the −0.5 / +0.5 controls, and use Clear to remove the rating. Ratings are shown on anime cards and can be used for library sorting.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">🏷️</span><span class="font-semibold text-sm text-white flex-1">Custom Tags</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Add comma-separated custom tags to organize your anime. Tags appear on library cards and Anime Details, can be searched, and are automatically collected into quick-filter pills on My Anime.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">📝</span><span class="font-semibold text-sm text-white flex-1">Notes & Review</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Save personal notes, thoughts, favourite moments, recommendations or watching context. Notes are displayed on the anime's Details screen and are included in backups.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">📜</span><span class="font-semibold text-sm text-white flex-1">Journey Timeline</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Add milestones such as Started New, Started Again, Completed Available Seasons, Completed Full Anime and Watched (useful for movie-only anime). Month and year can be set for each log and default to the current date. Logs are shown chronologically, with the oldest entries at the top and newest at the bottom. Individual logs can be edited or deleted.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">🔍</span><span class="font-semibold text-sm text-white flex-1">Anime Details</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Open an anime from My Anime, Dashboard or a Journey entry to see its poster, statuses, rating, tags, seasons, movies, OVAs, parts, progress, notes and journey events. From Details you can edit or delete the anime.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">💾</span><span class="font-semibold text-sm text-white flex-1">Backup & Restore</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Export your complete AniDiary database as a JSON backup. Backups include anime records, posters, tags, ratings, notes, dashboard visibility, release/watch statuses, seasons, parts, movies, OVAs and journey logs. Import a backup to restore the records; existing entries with the same ID are overwritten. The Android app uses the system Save picker when exporting.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">🗑️</span><span class="font-semibold text-sm text-white flex-1">Deleting Anime & Clear All Data</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Use the trash button on an anime's Details screen to delete that anime after confirmation. Settings also has Clear Database Entirely, which permanently removes all stored anime records and journey logs from the device after confirmation.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">⚙️</span><span class="font-semibold text-sm text-white flex-1">Settings & Offline Storage</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Settings provides Backup & Restore, the Help Guide, app information and data management. AniDiary stores your anime database locally on the device using offline browser storage, so your library is available without an online account or server.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">↩️</span><span class="font-semibold text-sm text-white flex-1">Navigation & Back</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">Use the bottom navigation to switch between Dashboard, My Anime, Journey and Settings. On Anime Details, use Back to Library. The app also keeps navigation history so the device/browser Back action can move through screens and close open dialogs in the expected order.</div>
+                </details>
+                <details class="group bg-slate-900/60 border border-slate-800 rounded-xl overflow-hidden">
+                    <summary class="list-none cursor-pointer flex items-center gap-3 p-3.5"><span class="text-lg w-7 text-center shrink-0">💡</span><span class="font-semibold text-sm text-white flex-1">Quick Tips</span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-500 group-open:rotate-180 transition"></i></summary>
+                    <div class="px-3.5 pb-3.5 pl-[3.25rem] text-[11px] leading-relaxed text-slate-400">A normal series can be Season 1 → Season 2 → Season 3. You can place a Movie or OVA between them, such as Season 1 → OVA → Movie → Season 2. Use parts when a season has separate sections, and use Journey logs when you want to preserve important milestones independently of watch-status changes.</div>
+                </details>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: CONFIRMATION DIALOG -->
+    <div id="modal-confirm" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md hidden">
+        <div class="glass-panel w-full max-w-sm rounded-2xl border border-slate-700 p-5 space-y-4 text-center">
+            <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-400 flex items-center justify-center mx-auto">
+                <i data-lucide="help-circle" class="w-6 h-6"></i>
+            </div>
+            <div>
+                <h4 id="confirm-title" class="text-base font-bold text-white">Confirm Action</h4>
+                <p id="confirm-desc" class="text-xs text-slate-400 mt-1">Are you sure you want to proceed?</p>
+            </div>
+            <div class="flex items-center space-x-2 pt-2">
+                <button onclick="app.closeConfirmModal(false)" class="flex-1 py-2 rounded-xl bg-slate-800 text-slate-300 font-semibold text-xs hover:bg-slate-700 transition">Cancel</button>
+                <button id="confirm-action-btn" class="flex-1 py-2 rounded-xl bg-red-600 text-white font-semibold text-xs hover:bg-red-500 transition">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed top-16 right-4 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <script>
+        /**
+         * AniDiary Core JavaScript Engine
+         * Implements IndexedDB storage, 10-Star Half-Rating Visual Renderer & Picker,
+         * Interactive Details Screen Season/Part status toggling & Auto Overall Watch Status calculation.
+         */
+
+        class AniDiaryDB {
+            constructor() {
+                this.dbName = 'AniDiaryDB';
+                this.version = 1;
+                this.db = null;
+            }
+
+            async open() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(this.dbName, this.version);
+                    request.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains('anime')) {
+                            const store = db.createObjectStore('anime', { keyPath: 'id' });
+                            store.createIndex('watchStatus', 'watchStatus', { unique: false });
+                            store.createIndex('updatedAt', 'updatedAt', { unique: false });
+                        }
+                    };
+                    request.onsuccess = (e) => {
+                        this.db = e.target.result;
+                        resolve(this.db);
+                    };
+                    request.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async getAllAnime() {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction('anime', 'readonly');
+                    const store = tx.objectStore('anime');
+                    const req = store.getAll();
+                    req.onsuccess = () => resolve(req.result || []);
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async saveAnime(item) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction('anime', 'readwrite');
+                    const store = tx.objectStore('anime');
+                    const req = store.put(item);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async deleteAnime(id) {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction('anime', 'readwrite');
+                    const store = tx.objectStore('anime');
+                    const req = store.delete(id);
+                    req.onsuccess = () => resolve();
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+
+            async clearAll() {
+                return new Promise((resolve, reject) => {
+                    const tx = this.db.transaction('anime', 'readwrite');
+                    const store = tx.objectStore('anime');
+                    const req = store.clear();
+                    req.onsuccess = () => resolve();
+                    req.onerror = (e) => reject(e.target.error);
+                });
+            }
+        }
+
+        class AniDiaryApp {
+            constructor() {
+                this.db = new AniDiaryDB();
+                this.animeList = [];
+                this.currentView = 'dashboard';
+                this.selectedAnimeId = null;
+                this.libraryScrollY = 0;
+                this.detailScrollY = 0;
+                this.selectedTagFilter = null;
+                this.activeImageData = null;
+                this.confirmCallback = null;
+                this.modalRatingValue = null; // 0 to 10 in steps of 0.5
+                this.isHandlingHistory = false;
+                this.modalHistoryActive = false;
+                this.modalHistoryType = null;
+                this.imageCropSource = null;
+                this.imageCropImage = null;
+                this.imageCropScale = 1;
+                this.imageCropX = 0;
+                this.imageCropY = 0;
+                this.imageCropDragging = false;
+                this.imageCropLastX = 0;
+                this.imageCropLastY = 0;
+            }
+
+            async init() {
+                // Keep one history entry behind the app so browser/WebView Back is handled
+                // by AniDiary instead of navigating away immediately.
+                const initialState = { aniDiary: true, view: 'dashboard', animeId: null, modal: null, root: true };
+                window.history.replaceState(initialState, '', window.location.href);
+                this.currentView = 'dashboard';
+                this.selectedAnimeId = null;
+                this.modalHistoryActive = false;
+                this.modalHistoryType = null;
+                window.history.pushState({ ...initialState, trap: true }, '', window.location.href);
+
+                window.onpopstate = (event) => {
+                    if (this.isHandlingHistory) return;
+                    this.handleAppBack(event);
+                };
+                try {
+                    await this.db.open();
+                    await this.loadData();
+                    this.switchView('dashboard');
+                    lucide.createIcons();
+                } catch (err) {
+                    this.showToast('Failed to initialize database.', 'error');
+                    console.error(err);
+                }
+            }
+
+            async loadData() {
+                this.animeList = await this.db.getAllAnime();
+                this.updateDashboard();
+                this.renderTagFilters();
+                this.renderLibrary();
+                this.renderJourneyTimeline();
+            }
+
+            showToast(message, type = 'info') {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                const color = type === 'error' ? 'bg-red-900/90 border-red-500 text-red-200' : 'bg-purple-900/90 border-purple-500 text-purple-200';
+                toast.className = `glass-panel ${color} px-4 py-2.5 rounded-xl border text-xs font-semibold shadow-xl transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+                toast.innerText = message;
+                container.appendChild(toast);
+
+                setTimeout(() => {
+                    toast.classList.remove('translate-y-2', 'opacity-0');
+                }, 10);
+
+                setTimeout(() => {
+                    toast.classList.add('opacity-0', '-translate-y-2');
+                    setTimeout(() => toast.remove(), 300);
+                }, 3000);
+            }
+
+            getBackDestination() {
+                // Fixed destinations by screen. This deliberately ignores navigation history.
+                const fixedParents = {
+                    dashboard: null,
+                    library: 'dashboard',
+                    details: 'library',
+                    journey: 'dashboard',
+                    settings: 'dashboard'
+                };
+                return Object.prototype.hasOwnProperty.call(fixedParents, this.currentView)
+                    ? fixedParents[this.currentView]
+                    : 'dashboard';
+            }
+
+            handleAppBack(event) {
+                // Modals behave like screens: Android Back closes the current modal first.
+                if (this.modalHistoryActive) {
+                    const type = this.modalHistoryType;
+                    this.modalHistoryActive = false;
+                    this.modalHistoryType = null;
+                    if (type === 'anime') this.closeAnimeModal();
+                    else if (type === 'help') this.closeHelpGuide();
+                    else if (type === 'journey-log') this.closeJourneyLogModal();
+                    else if (type === 'confirm') this.closeConfirmModal(true);
+                    this.resetBackTrap();
+                    return;
+                }
+
+                const destination = this.getBackDestination();
+                if (!destination) {
+                    // Dashboard is the app root. Re-arm the trap instead of calling history.back()
+                    // recursively; that behavior can make some Android WebViews finish the Activity.
+                    this.resetBackTrap();
+                    return;
+                }
+
+                this.isHandlingHistory = true;
+                this.switchView(destination, false);
+                this.isHandlingHistory = false;
+                this.resetBackTrap();
+            }
+
+            handleNativeBack() {
+                // Called directly by the Android Activity. Return true when AniDiary
+                // consumed the Back press; return false only at the dashboard root so
+                // Android can leave the app normally.
+                if (this.modalHistoryActive) {
+                    const type = this.modalHistoryType;
+                    this.isHandlingHistory = true;
+                    this.modalHistoryActive = false;
+                    this.modalHistoryType = null;
+
+                    if (type === 'anime') this.closeAnimeModal();
+                    else if (type === 'help') this.closeHelpGuide();
+                    else if (type === 'journey-log') this.closeJourneyLogModal();
+                    else if (type === 'confirm') this.closeConfirmModal(true);
+
+                    this.isHandlingHistory = false;
+                    return true;
+                }
+
+                const destination = this.getBackDestination();
+                if (!destination) return false;
+
+                this.isHandlingHistory = true;
+                this.switchView(destination, false);
+                this.isHandlingHistory = false;
+                return true;
+            }
+
+            resetBackTrap() {
+                // Recreate exactly one AniDiary back trap after handling Back.
+                const state = {
+                    aniDiary: true,
+                    view: this.currentView,
+                    animeId: this.currentView === 'details' ? this.selectedAnimeId : null,
+                    modal: null,
+                    trap: true
+                };
+                window.history.replaceState(state, '', window.location.href);
+                window.history.pushState(state, '', window.location.href);
+            }
+
+            activateModalBack(type) {
+                this.modalHistoryActive = true;
+                this.modalHistoryType = type;
+                window.history.pushState({
+                    aniDiary: true,
+                    view: this.currentView,
+                    animeId: this.currentView === 'details' ? this.selectedAnimeId : null,
+                    modal: type
+                }, '', window.location.href);
+            }
+
+            switchView(viewName, addToHistory = true) {
+                if (addToHistory && !this.isHandlingHistory && viewName !== this.currentView) {
+                    // Do not build a conventional screen history. The Back handler above
+                    // decides the destination from the current screen's fixed parent.
+                    this.currentView = viewName;
+                    this.resetBackTrap();
+                }
+                this.currentView = viewName;
+                document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+
+                // My Anime, Anime Details, and Journey are long-scrolling views. Keep the
+                // existing background design fixed while their content scrolls.
+                document.body.classList.toggle('long-scroll-background', viewName === 'dashboard' || viewName === 'library' || viewName === 'journey' || viewName === 'details' || viewName === 'settings');
+                
+                const targetView = document.getElementById(`view-${viewName}`);
+                if (targetView) targetView.classList.remove('hidden');
+
+                // Show the AniDiary top bar only on Dashboard and My Anime.
+                const topHeader = document.getElementById('app-top-header');
+                if (topHeader) {
+                    if (viewName === 'dashboard' || viewName === 'library') topHeader.classList.remove('hidden');
+                    else topHeader.classList.add('hidden');
+                }
+
+                // Update navbar states
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('text-purple-400', 'bg-purple-500/10');
+                    btn.classList.add('text-slate-400');
+                });
+                const activeNav = document.getElementById(`nav-${viewName}`);
+                if (activeNav) {
+                    activeNav.classList.remove('text-slate-400');
+                    activeNav.classList.add('text-purple-400', 'bg-purple-500/10');
+                }
+
+                if (viewName === 'dashboard') this.updateDashboard();
+                if (viewName === 'library') this.renderLibrary();
+                if (viewName === 'journey') this.renderJourneyTimeline();
+
+                // Preserve the user's position when returning to Library, and do not
+                // force Anime Details back to the top after an inline update.
+                // Journey intentionally opens at the newest (bottom) entry.
+                requestAnimationFrame(() => {
+                    if (viewName === 'journey') {
+                        window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'auto' });
+                    } else if (viewName === 'library' && this.libraryScrollY > 0) {
+                        window.scrollTo({ top: this.libraryScrollY, behavior: 'auto' });
+                    } else if (viewName !== 'details') {
+                        window.scrollTo({ top: 0, behavior: 'auto' });
+                    } else if (this.detailScrollY > 0) {
+                        window.scrollTo({ top: this.detailScrollY, behavior: 'auto' });
+                    }
+                });
+                lucide.createIcons();
+            }
+
+            filterByStatus(status) {
+                this.switchView('library');
+                const select = document.getElementById('filter-watch');
+                if (select) select.value = status;
+                this.renderLibrary();
+            }
+
+            updateDashboard() {
+                const total = this.animeList.length;
+                const unwatched = this.animeList.filter(a => a.watchStatus === 'Unwatched').length;
+                const watching = this.animeList.filter(a => a.watchStatus === 'Watching').length;
+                const completed = this.animeList.filter(a => a.watchStatus === 'Completed').length;
+
+                document.getElementById('stat-total').innerText = total;
+                document.getElementById('stat-unwatched').innerText = unwatched;
+                document.getElementById('stat-watching').innerText = watching;
+                document.getElementById('stat-completed').innerText = completed;
+                this.renderContinueWatching();
+
+                lucide.createIcons();
+            }
+
+            renderContinueWatching() {
+                const container = document.getElementById('continue-watching-list');
+                if (!container) return;
+
+                const watching = this.animeList
+                    .filter(anime => anime.watchStatus === 'Watching' && anime.dashboardVisible !== false)
+                    .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+
+                if (watching.length === 0) {
+                    container.innerHTML = `
+                        <div class="glass-panel rounded-2xl border border-slate-800/80 p-5 sm:col-span-2 lg:col-span-4 flex items-center gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                <i data-lucide="play" class="w-5 h-5 text-blue-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-200">Nothing to continue yet</p>
+                                <p class="text-xs text-slate-500 mt-0.5">Mark an anime as Watching and it will appear here.</p>
+                            </div>
+                        </div>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                container.innerHTML = watching.slice(0, 4).map(anime => {
+                    this.ensureStructuredEntries(anime);
+                    const entries = anime.entries || [];
+                    const current = entries.find(e => {
+                        if (e.type === 'movie') return (e.status || 'Unwatched') === 'Watching';
+                        const parts = e.parts || [];
+                        return parts.length ? parts.some(p => p.status === 'Watching') : (e.status || 'Unwatched') === 'Watching';
+                    }) || entries.find(e => e.type === 'season' && !(e.isCompleted || (e.parts || []).every(p => p.status === 'Completed')));
+
+                    let completedUnits = 0;
+                    let totalUnits = 0;
+                    entries.forEach(entry => {
+                        if (entry.type === 'movie' || entry.type === 'ova') {
+                            totalUnits++;
+                            if ((entry.status || 'Unwatched') === 'Completed') completedUnits++;
+                        } else if ((entry.parts || []).length) {
+                            (entry.parts || []).forEach(part => {
+                                totalUnits++;
+                                if (part.status === 'Completed') completedUnits++;
+                            });
+                        } else {
+                            totalUnits++;
+                            if (entry.isCompleted || entry.status === 'Completed') completedUnits++;
+                        }
+                    });
+                    const progress = totalUnits ? Math.round((completedUnits / totalUnits) * 100) : 0;
+
+                    let currentLabel = 'Continue watching';
+                    if (current) {
+                        if (current.type === 'movie') {
+                            currentLabel = current.name || 'Movie';
+                        } else {
+                            const seasonIndex = entries.filter(e => e.type === 'season').indexOf(current) + 1;
+                            const watchingPart = (current.parts || []).find(p => p.status === 'Watching');
+                            currentLabel = current.name || `Season ${seasonIndex}`;
+                            if (watchingPart) currentLabel += ` • ${watchingPart.name || `Part ${(current.parts || []).indexOf(watchingPart) + 1}`}`;
+                        }
+                    }
+
+                    const poster = anime.poster || 'https://placehold.co/400x600/1e1b4b/c084fc?text=No+Poster';
+                    return `
+                        <div onclick="app.openAnimeDetails('${anime.id}')" class="glass-panel rounded-2xl overflow-hidden border border-slate-800/80 hover:border-blue-500/40 transition duration-300 cursor-pointer group flex h-36 sm:h-40">
+                            <div class="w-24 sm:w-28 h-full flex-shrink-0 bg-slate-900 overflow-hidden">
+                                <img src="${poster}" alt="${anime.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" onerror="this.src='https://placehold.co/400x600/1e1b4b/c084fc?text=No+Poster'">
+                            </div>
+                            <div class="p-3 flex-1 min-w-0 flex flex-col justify-between">
+                                <div>
+                                    <span class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-blue-300 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded-md">
+                                        <i data-lucide="play" class="w-2.5 h-2.5"></i> Watching
+                                    </span>
+                                    <h4 class="font-bold text-sm text-white line-clamp-2 leading-tight mt-1.5 group-hover:text-blue-300 transition">${anime.title}</h4>
+                                    <p class="text-[10px] text-slate-400 mt-1 truncate">${currentLabel}</p>
+                                </div>
+                                <div>
+                                    <div class="flex items-center justify-between text-[9px] text-slate-500 mb-1">
+                                        <span>Progress</span><span>${progress}%</span>
+                                    </div>
+                                    <div class="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                                        <div class="h-full bg-blue-500 rounded-full transition-all" style="width:${progress}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                }).join('');
+                lucide.createIcons();
+            }
+
+            /**
+             * Renders 10 stars HTML string for any rating 0.0 - 10.0
+             * Handles integer full stars, .5 half filled stars, and empty stars.
+             */
+            renderStarRatingHTML(rating, sizeClass = 'w-3.5 h-3.5') {
+                if (rating === null || rating === undefined || rating === '' || isNaN(rating)) {
+                    return '<span class="text-xs text-slate-500 font-medium italic">Unrated</span>';
+                }
+
+                const val = Math.min(10, Math.max(0, parseFloat(rating)));
+                const roundedVal = Math.round(val * 2) / 2;
+                const fullStars = Math.floor(roundedVal);
+                const hasHalf = (roundedVal - fullStars) >= 0.5;
+                const emptyStars = 10 - fullStars - (hasHalf ? 1 : 0);
+
+                let html = '<div class="flex items-center gap-0.5 text-amber-400">';
+                
+                // Full Stars
+                for (let i = 0; i < fullStars; i++) {
+                    html += `<svg class="${sizeClass} fill-amber-400 text-amber-400 flex-shrink-0" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+                }
+
+                // Half Star
+                if (hasHalf) {
+                    html += `<svg class="${sizeClass} flex-shrink-0" viewBox="0 0 24 24">
+                        <defs>
+                            <linearGradient id="half-star-grad-${Math.random().toString(36).substr(2, 5)}">
+                                <stop offset="50%" stop-color="#fbbf24"/>
+                                <stop offset="50%" stop-color="#334155"/>
+                            </linearGradient>
+                        </defs>
+                        <path fill="url(#half-star-grad-${Math.random().toString(36).substr(2, 5)})" stroke="#fbbf24" stroke-width="0.5" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>`;
+                }
+
+                // Empty Stars
+                for (let i = 0; i < emptyStars; i++) {
+                    html += `<svg class="${sizeClass} text-slate-700 fill-slate-800 flex-shrink-0" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+                }
+
+                html += `<span class="ml-1.5 text-xs font-bold text-amber-400 tracking-tight">${roundedVal.toFixed(1)}/10</span></div>`;
+                return html;
+            }
+
+            renderTagFilters() {
+                const container = document.getElementById('library-tags-container');
+                container.innerHTML = '';
+
+                const tagsSet = new Set();
+                this.animeList.forEach(a => (a.tags || []).forEach(t => tagsSet.add(t.trim())));
+                const tags = Array.from(tagsSet).filter(Boolean);
+
+                if (tags.length === 0) {
+                    container.classList.add('hidden');
+                    return;
+                }
+                container.classList.remove('hidden');
+
+                const allBtn = document.createElement('button');
+                allBtn.className = `px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition ${!this.selectedTagFilter ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`;
+                allBtn.innerText = 'All Tags';
+                allBtn.onclick = () => { this.selectedTagFilter = null; this.renderTagFilters(); this.renderLibrary(); };
+                container.appendChild(allBtn);
+
+                tags.forEach(tag => {
+                    const btn = document.createElement('button');
+                    const isActive = this.selectedTagFilter === tag;
+                    btn.className = `px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition ${isActive ? 'bg-purple-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`;
+                    btn.innerText = tag;
+                    btn.onclick = () => {
+                        this.selectedTagFilter = isActive ? null : tag;
+                        this.renderTagFilters();
+                        this.renderLibrary();
+                    };
+                    container.appendChild(btn);
+                });
+            }
+
+            handleSearch(query) {
+                const clearBtn = document.getElementById('search-clear-btn');
+                if (query.trim()) clearBtn.classList.remove('hidden');
+                else clearBtn.classList.add('hidden');
+                this.renderLibrary();
+            }
+
+            clearSearch() {
+                const input = document.getElementById('library-search');
+                input.value = '';
+                document.getElementById('search-clear-btn').classList.add('hidden');
+                this.renderLibrary();
+            }
+
+            renderLibrary() {
+                const grid = document.getElementById('library-grid');
+                const emptyState = document.getElementById('library-empty-state');
+                grid.innerHTML = '';
+
+                const searchQuery = document.getElementById('library-search').value.toLowerCase().trim();
+                const filterWatch = document.getElementById('filter-watch').value;
+                const filterRelease = document.getElementById('filter-release').value;
+                const filterType = document.getElementById('filter-type').value;
+                const sortOrder = document.getElementById('sort-order').value;
+
+                let filtered = [...this.animeList];
+
+                if (searchQuery) {
+                    filtered = filtered.filter(a => 
+                        a.title.toLowerCase().includes(searchQuery) || 
+                        (a.tags && a.tags.some(t => t.toLowerCase().includes(searchQuery)))
+                    );
+                }
+
+                if (filterWatch !== 'ALL') filtered = filtered.filter(a => a.watchStatus === filterWatch);
+                if (filterRelease !== 'ALL') filtered = filtered.filter(a => a.releaseStatus === filterRelease);
+                if (filterType !== 'ALL') filtered = filtered.filter(a => this.getAnimeType(a) === filterType);
+                if (this.selectedTagFilter) filtered = filtered.filter(a => a.tags && a.tags.includes(this.selectedTagFilter));
+
+                filtered.sort((a, b) => {
+                    if (sortOrder === 'a_z') return a.title.localeCompare(b.title);
+                    if (sortOrder === 'z_a') return b.title.localeCompare(a.title);
+                    if (sortOrder === 'rating_high') return (b.rating || 0) - (a.rating || 0);
+                    if (sortOrder === 'rating_low') return (a.rating || 0) - (b.rating || 0);
+                    if (sortOrder === 'recently_modified') return (b.updatedAt || 0) - (a.updatedAt || 0);
+                    return (b.createdAt || 0) - (a.createdAt || 0);
+                });
+
+                if (filtered.length === 0) {
+                    grid.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    if (this.animeList.length > 0) {
+                        document.getElementById('empty-state-title').innerText = 'No matching anime found';
+                        document.getElementById('empty-state-desc').innerText = 'Try adjusting your search terms or filters.';
+                    }
+                    return;
+                }
+
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+
+                filtered.forEach(anime => {
+                    const card = this.createAnimeCard(anime);
+                    grid.appendChild(card);
+                });
+
+                lucide.createIcons();
+            }
+
+            createAnimeCard(anime) {
+                const card = document.createElement('div');
+                card.className = 'glass-panel rounded-2xl overflow-hidden border border-slate-800/80 hover:border-purple-500/40 transition duration-300 flex flex-col group cursor-pointer relative';
+                card.onclick = () => this.openAnimeDetails(anime.id);
+
+                const posterSrc = anime.poster || 'https://placehold.co/400x600/1e1b4b/c084fc?text=No+Poster';
+                const animeType = this.getAnimeType(anime);
+
+                let watchBadgeColor = 'bg-slate-600 text-white border-slate-500';
+                if (anime.watchStatus === 'Watching') watchBadgeColor = 'bg-blue-600 text-white border-blue-500';
+                if (anime.watchStatus === 'Completed') watchBadgeColor = 'bg-emerald-600 text-white border-emerald-500';
+
+                let releaseBadgeColor = 'bg-slate-600 text-white border-slate-500';
+                if (anime.releaseStatus === 'Ongoing') releaseBadgeColor = 'bg-red-600 text-white border-red-500';
+                if (anime.releaseStatus === 'Complete') releaseBadgeColor = 'bg-purple-600 text-white border-purple-500';
+
+                const seasonCount = (anime.seasons || []).length;
+                const movieCount = (anime.movies || []).length;
+                let typeText;
+                if (animeType === 'Movie') {
+                    typeText = 'Movie';
+                } else {
+                    typeText = `${seasonCount} Season${seasonCount > 1 ? 's' : ''}`;
+                }
+
+                card.innerHTML = `
+                    <div class="aspect-[2/3] w-full overflow-hidden bg-slate-900 relative">
+                        <img src="${posterSrc}" alt="${anime.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" loading="lazy" onerror="this.src='https://placehold.co/400x600/1e1b4b/c084fc?text=No+Poster'">
+                        <div class="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-[#0d0e15] via-[#0d0e15]/55 to-transparent"></div>
+                        <div class="absolute top-2 left-2 right-2 flex items-center gap-1 flex-nowrap min-w-0">
+                            <span class="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md border ${watchBadgeColor} whitespace-nowrap">${anime.watchStatus}</span>
+                            <span class="text-[8px] sm:text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md border ${releaseBadgeColor} whitespace-nowrap">${anime.releaseStatus || 'Complete'}</span>
+                            ${anime.rating !== null && anime.rating !== undefined && anime.rating !== '' ? `
+                                <span class="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-400 text-slate-950 border border-amber-300 flex items-center gap-0.5 whitespace-nowrap">★ ${parseFloat(anime.rating).toFixed(1)}</span>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="anime-card-details relative z-10 -mt-10 pt-14 px-3 pb-3 flex-1 flex flex-col justify-between space-y-2 bg-gradient-to-b from-transparent via-[#0d0e15]/85 to-[#0d0e15]">
+                        <div>
+                            <h4 class="font-bold text-xs sm:text-sm text-white line-clamp-2 leading-tight group-hover:text-purple-300 transition mt-2">${anime.title}</h4>
+                            <div class="flex items-center text-[11px] text-slate-400 mt-1">
+                                <span>${typeText}</span>
+                            </div>
+                        </div>
+                        ${(anime.tags && anime.tags.length > 0) ? `
+                            <div class="flex flex-wrap gap-1 pt-1">
+                                ${anime.tags.slice(0, 2).map(t => `<span class="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded">${t}</span>`).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                return card;
+            }
+
+            getAnimeType(anime) {
+                const seasonCount = (anime.seasons || []).length;
+                const movieCount = (anime.movies || []).length;
+                return seasonCount > 0 ? 'Series' : (movieCount > 0 ? 'Movie' : 'Series');
+            }
+
+            openAnimeDetails(id) {
+                const openingFromLibrary = this.currentView === 'library';
+                if (openingFromLibrary) {
+                    this.libraryScrollY = window.scrollY;
+                    // A newly opened anime must always start at the top of its Details screen,
+                    // not reuse the scroll position from a previously viewed anime.
+                    this.detailScrollY = 0;
+                }
+                const anime = this.animeList.find(a => a.id === id);
+                if (!anime) return;
+                this.selectedAnimeId = id;
+
+                document.getElementById('detail-poster').src = anime.poster || 'https://placehold.co/400x600/1e1b4b/c084fc?text=No+Poster';
+                document.getElementById('detail-title').innerText = anime.title;
+
+                // Watch status badge
+                const watchBadge = document.getElementById('detail-badge-watch');
+                watchBadge.innerText = anime.watchStatus;
+                watchBadge.className = 'text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-md border ';
+                if (anime.watchStatus === 'Watching') watchBadge.className += 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+                else if (anime.watchStatus === 'Completed') watchBadge.className += 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+                else watchBadge.className += 'bg-slate-800 text-slate-300 border-slate-700';
+
+                // Release badge
+                const releaseBadge = document.getElementById('detail-badge-release');
+                releaseBadge.innerText = `Release: ${anime.releaseStatus || 'Complete'}`;
+                releaseBadge.className = anime.releaseStatus === 'Ongoing' ? 'text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-md border bg-purple-500/20 text-purple-300 border-purple-500/30' : 'text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-md border bg-slate-800 text-slate-300 border-slate-700';
+
+                // Render 10 Stars rating
+                document.getElementById('detail-stars-container').innerHTML = this.renderStarRatingHTML(anime.rating, 'w-4 h-4');
+
+                // Tags
+                const tagsContainer = document.getElementById('detail-tags');
+                tagsContainer.innerHTML = '';
+                (anime.tags || []).forEach(t => {
+                    const tagPill = document.createElement('span');
+                    tagPill.className = 'text-[10px] bg-gradient-to-r from-purple-500/15 to-pink-500/10 text-purple-200 border border-purple-500/20 px-2 py-0.5 rounded-md font-medium';
+                    tagPill.innerText = t;
+                    tagsContainer.appendChild(tagPill);
+                });
+
+                // Notes
+                document.getElementById('detail-notes').innerText = anime.notes || 'No notes added.';
+
+                // Render Direct Interactive Seasons & Parts Toggles
+                this.renderInteractiveSeasons(anime);
+
+                // Details Journey Entries
+                const journeyContainer = document.getElementById('detail-journey-events');
+                journeyContainer.innerHTML = '';
+                const events = anime.journeyEvents || [];
+                if (events.length === 0) {
+                    journeyContainer.innerHTML = '<p class="text-xs text-slate-500 italic">No timeline events logged.</p>';
+                } else {
+                    events.forEach((ev, evIdx) => {
+                        const dateText = (ev.month && ev.month !== 'Unknown' && ev.year) ? `${ev.month} ${ev.year}` : (ev.year ? `${ev.month === 'Unknown' ? 'Unknown month' : ''} ${ev.year}`.trim() : 'Date Unknown');
+                        const displayMap = { 'Started': 'Started New', 'Started again': 'Started Again', 'Completed': 'Completed Available Seasons', 'Available': 'Completed Available Seasons', 'Completed fully': 'Completed Full Anime', 'Watched': 'Watched' };
+                        const displayType = displayMap[ev.type] || ev.type || 'Log';
+                        const eventStyle = displayType === 'Started New' ? 'bg-blue-400' : (displayType === 'Started Again' ? 'bg-violet-400' : (displayType === 'Completed Available Seasons' ? 'bg-amber-400' : (displayType === 'Completed Full Anime' ? 'bg-emerald-400' : 'bg-cyan-400')));
+                        const evDiv = document.createElement('div');
+                        evDiv.className = 'flex items-center gap-3 text-xs bg-gradient-to-r from-slate-900/75 via-slate-900/55 to-purple-950/20 p-3 rounded-xl border border-white/5 shadow-lg shadow-black/10';
+                        evDiv.innerHTML = `
+                            <div class="w-8 h-8 rounded-lg icon-gradient flex items-center justify-center shrink-0"><i data-lucide="${displayType === 'Started New' ? 'play' : (displayType === 'Started Again' ? 'rotate-ccw' : (displayType === 'Completed Available Seasons' ? 'layers' : (displayType === 'Completed Full Anime' ? 'crown' : 'eye')))}" class="w-4 h-4 text-purple-200"></i></div>
+                            <div class="w-1.5 h-1.5 rounded-full ${eventStyle} shrink-0"></div>
+                            <span class="font-bold text-white flex-1 leading-tight">${displayType}</span>
+                            <span class="text-slate-400 text-[11px] whitespace-nowrap">${dateText}</span>
+                            <button type="button" onclick="app.openJourneyLogModal(${evIdx})" class="text-slate-500 hover:text-white hover:bg-white/5 p-2 rounded-lg transition" title="Edit log"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        `;
+                        journeyContainer.appendChild(evDiv);
+                    });
+                }
+
+                this.switchView('details');
+                // When entering Details from Library, start at the top. When refreshing an
+                // already-open Details screen, switchView() will restore detailScrollY.
+                if (openingFromLibrary) {
+                    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'auto' }));
+                }
+                lucide.createIcons();
+            }
+
+            /**
+             * Renders Season and Part controls with DIRECT INTERACTIVE TOGGLES
+             */
+            renderInteractiveSeasons(anime) {
+                const seasonCountBadge = document.getElementById('detail-season-count-badge');
+                const seasonsContainer = document.getElementById('detail-seasons-container');
+                seasonsContainer.innerHTML = '';
+
+                const seasons = anime.seasons || [];
+                const movies = anime.movies || [];
+                const ovas = anime.ovas || [];
+                const counterParts = [];
+                if (seasons.length) counterParts.push(`${seasons.length} Season${seasons.length !== 1 ? 's' : ''}`);
+                if (movies.length) counterParts.push(`${movies.length} Movie${movies.length !== 1 ? 's' : ''}`);
+                if (ovas.length) counterParts.push(`${ovas.length} OVA${ovas.length !== 1 ? 's' : ''}`);
+                seasonCountBadge.innerText = counterParts.join(' • ') || 'No entries';
+
+                if (seasons.length === 0 && movies.length === 0 && ovas.length === 0) {
+                    seasonsContainer.innerHTML = `
+                        <div class="bg-slate-900/50 p-4 rounded-xl text-center border border-slate-800 space-y-2">
+                            <p class="text-xs text-slate-400">No seasons or movies defined yet for this anime.</p>
+                            <button onclick="app.editCurrentAnime()" class="text-xs text-purple-400 hover:underline font-semibold">Click here to add them</button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const entries = anime.entries || [
+                    ...seasons.map(sec => ({ type: 'season', ...sec })),
+                    ...movies.map(movie => ({ type: 'movie', ...movie })),
+                    ...ovas.map(ova => ({ type: 'ova', ...ova }))
+                ];
+                let seasonNumber = 0;
+                let movieNumber = 0;
+                entries.forEach((entry, entryIdx) => {
+                    if (entry.type === 'movie') {
+                        movieNumber++;
+                        const movieCard = document.createElement('div');
+                        movieCard.className = 'bg-slate-900/90 border border-pink-500/10 rounded-2xl p-4 space-y-3';
+                        const movieStatus = entry.status || 'Unwatched';
+                        movieCard.innerHTML = `
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="clapperboard" class="w-4 h-4 text-pink-400"></i>
+                                    <h4 class="font-bold text-sm text-white">${entry.name || `Movie ${movieNumber}`}</h4>
+                                </div>
+                                <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px]">
+                                    <button onclick="app.toggleMovieStatus('${anime.id}', ${entryIdx}, 'Unwatched')" class="px-2.5 py-1 rounded-lg font-semibold ${movieStatus === 'Unwatched' ? 'bg-slate-800 text-slate-200' : 'text-slate-500 hover:text-slate-300'}">○ Unwatched</button>
+                                    <button onclick="app.toggleMovieStatus('${anime.id}', ${entryIdx}, 'Watching')" class="px-2.5 py-1 rounded-lg font-semibold ${movieStatus === 'Watching' ? 'bg-blue-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">▶ Watching</button>
+                                    <button onclick="app.toggleMovieStatus('${anime.id}', ${entryIdx}, 'Completed')" class="px-2.5 py-1 rounded-lg font-semibold ${movieStatus === 'Completed' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">✓ Completed</button>
+                                </div>
+                            </div>`;
+                        seasonsContainer.appendChild(movieCard);
+                        return;
+                    }
+
+                    if (entry.type === 'ova') {
+                        const ovaNumber = entries.slice(0, entryIdx + 1).filter(e => e.type === 'ova').length;
+                        const ovaCard = document.createElement('div');
+                        ovaCard.className = 'bg-slate-900/90 border border-cyan-500/10 rounded-2xl p-4 space-y-3';
+                        const ovaStatus = entry.status || 'Unwatched';
+                        ovaCard.innerHTML = `
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div class="flex items-center space-x-2">
+                                    <i data-lucide="tv-minimal" class="w-4 h-4 text-cyan-400"></i>
+                                    <h4 class="font-bold text-sm text-white">${entry.name || `OVA ${ovaNumber}`}</h4>
+                                </div>
+                                <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px]">
+                                    <button onclick="app.toggleOVAStatus('${anime.id}', ${entryIdx}, 'Unwatched')" class="px-2.5 py-1 rounded-lg font-semibold ${ovaStatus === 'Unwatched' ? 'bg-slate-800 text-slate-200' : 'text-slate-500 hover:text-slate-300'}">○ Unwatched</button>
+                                    <button onclick="app.toggleOVAStatus('${anime.id}', ${entryIdx}, 'Watching')" class="px-2.5 py-1 rounded-lg font-semibold ${ovaStatus === 'Watching' ? 'bg-blue-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">▶ Watching</button>
+                                    <button onclick="app.toggleOVAStatus('${anime.id}', ${entryIdx}, 'Completed')" class="px-2.5 py-1 rounded-lg font-semibold ${ovaStatus === 'Completed' ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">✓ Completed</button>
+                                </div>
+                            </div>`;
+                        seasonsContainer.appendChild(ovaCard);
+                        return;
+                    }
+
+                    seasonNumber++;
+                    const sec = entry;
+                    const seasonCard = document.createElement('div');
+                    seasonCard.className = 'bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3';
+                    const parts = sec.parts || [];
+                    const isSeasonCompleted = sec.isCompleted || (parts.length > 0 && parts.every(p => p.status === 'Completed'));
+                    seasonCard.innerHTML = `
+                        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-2.5">
+                            <div class="flex items-center space-x-2">
+                                <i data-lucide="folder" class="w-4 h-4 text-purple-400"></i>
+                                <h4 class="font-bold text-sm text-white">${sec.name || `Season ${seasonNumber}`}</h4>
+                            </div>
+                            <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px]">
+                                <button onclick="app.toggleSeasonStatus('${anime.id}', ${entryIdx}, 'Unwatched')" class="px-2.5 py-1 rounded-lg font-semibold transition ${!isSeasonCompleted && (parts.length ? parts.every(p => p.status === 'Unwatched') : (sec.status || 'Unwatched') === 'Unwatched') ? 'bg-slate-800 text-slate-200' : 'text-slate-500 hover:text-slate-300'}">○ Unwatched</button>
+                                <button onclick="app.toggleSeasonStatus('${anime.id}', ${entryIdx}, 'Watching')" class="px-2.5 py-1 rounded-lg font-semibold transition ${!isSeasonCompleted && (parts.length ? parts.some(p => p.status === 'Watching' || p.status === 'Completed') : (sec.status || 'Unwatched') === 'Watching') ? 'bg-blue-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">▶ Watching</button>
+                                <button onclick="app.toggleSeasonStatus('${anime.id}', ${entryIdx}, 'Completed')" class="px-2.5 py-1 rounded-lg font-semibold transition ${isSeasonCompleted ? 'bg-emerald-600 text-white shadow' : 'text-slate-500 hover:text-slate-300'}">✓ Completed</button>
+                            </div>
+                        </div>
+                        ${parts.length > 0 ? `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">${parts.map((p, pIdx) => `
+                            <div class="flex items-center justify-between bg-slate-950/80 p-2.5 rounded-xl border border-slate-800 text-xs">
+                                <span class="text-slate-200 font-medium">${p.name || `Part ${pIdx + 1}`}</span>
+                                <div class="flex items-center space-x-1">
+                                    <button onclick="app.togglePartStatus('${anime.id}', ${entryIdx}, ${pIdx}, 'Unwatched')" title="Mark Unwatched" class="p-1 rounded-lg text-[10px] font-bold ${p.status === 'Unwatched' ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'text-slate-600 hover:text-slate-400'}">○</button>
+                                    <button onclick="app.togglePartStatus('${anime.id}', ${entryIdx}, ${pIdx}, 'Watching')" title="Mark Watching" class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${p.status === 'Watching' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' : 'text-slate-600 hover:text-slate-400'}">▶ Watching</button>
+                                    <button onclick="app.togglePartStatus('${anime.id}', ${entryIdx}, ${pIdx}, 'Completed')" title="Mark Completed" class="px-2 py-0.5 rounded-lg text-[10px] font-bold ${p.status === 'Completed' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'text-slate-600 hover:text-slate-400'}">✓ Done</button>
+                                </div>
+                            </div>`).join('')}</div>` : ''}`;
+                    seasonsContainer.appendChild(seasonCard);
+                });
+                lucide.createIcons();
+            }
+
+            async toggleSeasonStatus(animeId, entryIdx, targetStatus) {
+                const anime = this.animeList.find(a => a.id === animeId);
+                if (!anime) return;
+                this.ensureStructuredEntries(anime);
+                const sec = anime.entries[entryIdx];
+                if (!sec || sec.type !== 'season') return;
+                sec.status = targetStatus;
+                if (targetStatus === 'Completed') {
+                    sec.isCompleted = true;
+                    (sec.parts || []).forEach(p => p.status = 'Completed');
+                } else if (targetStatus === 'Unwatched') {
+                    sec.isCompleted = false;
+                    (sec.parts || []).forEach(p => p.status = 'Unwatched');
+                } else {
+                    sec.isCompleted = false;
+                    if (sec.parts && sec.parts.length > 0) sec.parts[0].status = 'Watching';
+                }
+                this.syncLegacyStructure(anime);
+                this.calculateAndUpdateOverallWatchStatus(anime);
+                await this.db.saveAnime(anime);
+                const savedDetailScroll = window.scrollY;
+                this.detailScrollY = savedDetailScroll;
+                await this.loadData();
+                this.openAnimeDetails(animeId);
+                this.detailScrollY = savedDetailScroll;
+                this.showToast(`Updated ${sec.name || 'Season'} to ${targetStatus}!`);
+            }
+
+            async togglePartStatus(animeId, entryIdx, pIdx, targetStatus) {
+                const anime = this.animeList.find(a => a.id === animeId);
+                if (!anime) return;
+                this.ensureStructuredEntries(anime);
+                const sec = anime.entries[entryIdx];
+                if (!sec || sec.type !== 'season' || !sec.parts || !sec.parts[pIdx]) return;
+                const part = sec.parts[pIdx];
+                part.status = targetStatus;
+                sec.status = targetStatus === 'Completed' ? 'Completed' : (targetStatus === 'Watching' ? 'Watching' : 'Unwatched');
+                sec.isCompleted = sec.parts.length > 0 && sec.parts.every(p => p.status === 'Completed');
+                this.syncLegacyStructure(anime);
+                this.calculateAndUpdateOverallWatchStatus(anime);
+                await this.db.saveAnime(anime);
+                const savedDetailScroll = window.scrollY;
+                this.detailScrollY = savedDetailScroll;
+                await this.loadData();
+                this.openAnimeDetails(animeId);
+                this.detailScrollY = savedDetailScroll;
+                this.showToast(`Updated ${part.name} to ${targetStatus}!`);
+            }
+
+            async toggleMovieStatus(animeId, entryIdx, targetStatus) {
+                const anime = this.animeList.find(a => a.id === animeId);
+                if (!anime) return;
+                this.ensureStructuredEntries(anime);
+                const movie = anime.entries[entryIdx];
+                if (!movie || movie.type !== 'movie') return;
+                movie.status = targetStatus;
+                this.syncLegacyStructure(anime);
+                this.calculateAndUpdateOverallWatchStatus(anime);
+                await this.db.saveAnime(anime);
+                const savedDetailScroll = window.scrollY;
+                this.detailScrollY = savedDetailScroll;
+                await this.loadData();
+                this.openAnimeDetails(animeId);
+                this.detailScrollY = savedDetailScroll;
+                this.showToast(`Updated ${movie.name || 'Movie'} to ${targetStatus}!`);
+            }
+
+            async toggleOVAStatus(animeId, entryIdx, targetStatus) {
+                const anime = this.animeList.find(a => a.id === animeId);
+                if (!anime) return;
+                this.ensureStructuredEntries(anime);
+                const ova = anime.entries[entryIdx];
+                if (!ova || ova.type !== 'ova') return;
+                ova.status = targetStatus;
+                this.calculateAndUpdateOverallWatchStatus(anime);
+                this.syncLegacyStructure(anime);
+                await this.db.saveAnime(anime);
+                const savedDetailScroll = window.scrollY;
+                this.detailScrollY = savedDetailScroll;
+                await this.loadData();
+                this.openAnimeDetails(animeId);
+                this.detailScrollY = savedDetailScroll;
+                this.showToast(`Updated ${ova.name || 'OVA'} to ${targetStatus}!`);
+            }
+
+            ensureStructuredEntries(anime) {
+                if (Array.isArray(anime.entries)) return;
+                anime.entries = [
+                    ...(anime.seasons || []).map(sec => ({ type: 'season', ...sec })),
+                    ...(anime.movies || []).map(movie => ({ type: 'movie', ...movie, status: movie.status || 'Unwatched' })),
+                    ...(anime.ovas || []).map(ova => ({ type: 'ova', ...ova, status: ova.status || 'Unwatched' }))
+                ];
+            }
+
+            syncLegacyStructure(anime) {
+                this.ensureStructuredEntries(anime);
+                anime.seasons = anime.entries.filter(e => e.type === 'season').map(({ type, ...sec }) => sec);
+                anime.movies = anime.entries.filter(e => e.type === 'movie').map(({ type, ...movie }) => movie);
+                anime.ovas = anime.entries.filter(e => e.type === 'ova').map(({ type, ...ova }) => ova);
+            }
+
+            calculateAndUpdateOverallWatchStatus(anime) {
+                anime.updatedAt = Date.now();
+                this.ensureStructuredEntries(anime);
+                const entries = anime.entries || [];
+                if (entries.length === 0) return;
+                let allCompleted = true;
+                let allUnwatched = true;
+                entries.forEach(entry => {
+                    if (entry.type === 'movie') {
+                        const status = entry.status || 'Unwatched';
+                        if (status !== 'Completed') allCompleted = false;
+                        if (status !== 'Unwatched') allUnwatched = false;
+                    } else {
+                        const parts = entry.parts || [];
+                        if (parts.length > 0) {
+                            parts.forEach(p => {
+                                if (p.status !== 'Completed') allCompleted = false;
+                                if (p.status !== 'Unwatched') allUnwatched = false;
+                            });
+                        } else {
+                            const status = entry.status || (entry.isCompleted ? 'Completed' : 'Unwatched');
+                            if (status !== 'Completed') allCompleted = false;
+                            if (status !== 'Unwatched') allUnwatched = false;
+                        }
+                    }
+                });
+                anime.watchStatus = allCompleted ? 'Completed' : (allUnwatched ? 'Unwatched' : 'Watching');
+            }
+
+            renderInteractiveStarPicker(val) {
+                const container = document.getElementById('interactive-stars-picker');
+                const display = document.getElementById('rating-value-display');
+                const hiddenInput = document.getElementById('input-rating-hidden');
+
+                this.modalRatingValue = val !== null && val !== undefined && val !== '' ? Math.round(parseFloat(val) * 2) / 2 : null;
+                hiddenInput.value = this.modalRatingValue !== null ? this.modalRatingValue : '';
+
+                if (this.modalRatingValue === null) {
+                    display.innerText = 'Unrated';
+                } else {
+                    display.innerText = `${this.modalRatingValue.toFixed(1)} / 10.0`;
+                }
+
+                container.innerHTML = '';
+
+                for (let i = 1; i <= 10; i++) {
+                    const starWrapper = document.createElement('div');
+                    starWrapper.className = 'relative p-1 hover:scale-110 transition cursor-pointer';
+
+                    let starFillHTML = `<svg class="w-6 h-6 text-slate-700 fill-slate-800" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+
+                    if (this.modalRatingValue !== null) {
+                        if (i <= Math.floor(this.modalRatingValue)) {
+                            starFillHTML = `<svg class="w-6 h-6 fill-amber-400 text-amber-400" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
+                        } else if (i === Math.ceil(this.modalRatingValue) && (this.modalRatingValue % 1 !== 0)) {
+                            starFillHTML = `<svg class="w-6 h-6" viewBox="0 0 24 24">
+                                <defs>
+                                    <linearGradient id="modal-half-star">
+                                        <stop offset="50%" stop-color="#fbbf24"/>
+                                        <stop offset="50%" stop-color="#334155"/>
+                                    </linearGradient>
+                                </defs>
+                                <path fill="url(#modal-half-star)" stroke="#fbbf24" stroke-width="0.5" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>`;
+                        }
+                    }
+
+                    starWrapper.innerHTML = starFillHTML;
+
+                    starWrapper.onclick = (e) => {
+                        const rect = starWrapper.getBoundingClientRect();
+                        const clickX = e.clientX - rect.left;
+                        const isLeftHalf = clickX < (rect.width / 2);
+                        const targetVal = isLeftHalf ? (i - 0.5) : i;
+                        this.setModalRating(targetVal);
+                    };
+
+                    container.appendChild(starWrapper);
+                }
+            }
+
+            setModalRating(val) {
+                if (val === null || val === '') {
+                    this.renderInteractiveStarPicker(null);
+                    return;
+                }
+                let num = parseFloat(val);
+                if (isNaN(num)) num = 0;
+                num = Math.min(10, Math.max(0, Math.round(num * 2) / 2));
+                this.renderInteractiveStarPicker(num);
+            }
+
+            adjustModalRating(delta) {
+                const current = this.modalRatingValue !== null ? this.modalRatingValue : 0;
+                this.setModalRating(current + delta);
+            }
+
+            openAnimeModal(animeId = null) {
+                const modal = document.getElementById('modal-anime');
+                const form = document.getElementById('form-anime');
+                form.reset();
+                this.activeImageData = null;
+                document.getElementById('image-preview-container').classList.add('hidden');
+                document.getElementById('file-label-text').innerText = 'Choose Device Image';
+
+                const seasonsContainer = document.getElementById('form-seasons-container');
+                seasonsContainer.innerHTML = '';
+
+                if (animeId) {
+                    const anime = this.animeList.find(a => a.id === animeId);
+                    if (anime) {
+                        document.getElementById('modal-anime-title').innerText = 'Edit Anime';
+                        document.getElementById('anime-id').value = anime.id;
+                        document.getElementById('input-title').value = anime.title;
+                        document.getElementById('input-release-status').value = anime.releaseStatus || 'Complete';
+                        document.getElementById('input-watch-status').value = anime.watchStatus || 'Unwatched';
+                        document.getElementById('input-dashboard-visible').checked = anime.dashboardVisible !== false;
+                        document.getElementById('input-tags').value = (anime.tags || []).join(', ');
+                        document.getElementById('input-notes').value = anime.notes || '';
+
+                        this.setModalRating(anime.rating);
+
+                        if (anime.poster) {
+                            this.activeImageData = anime.poster;
+                            document.getElementById('image-preview').src = anime.poster;
+                            document.getElementById('image-preview-container').classList.remove('hidden');
+                        }
+
+                        this.ensureStructuredEntries(anime);
+                        anime.entries.forEach(entry => entry.type === 'movie' ? this.addMovieField(entry) : (entry.type === 'ova' ? this.addOVAField(entry) : this.addSeasonField(entry)));
+
+                    }
+                } else {
+                    document.getElementById('modal-anime-title').innerText = 'Add Anime';
+                    document.getElementById('anime-id').value = '';
+                    this.setModalRating(null);
+                    this.addSeasonField({ name: 'Season 1', isCompleted: false, parts: [] });
+                }
+
+                modal.classList.remove('hidden');
+                lucide.createIcons();
+                if (!this.modalHistoryActive && !this.isHandlingHistory) this.activateModalBack('anime');
+            }
+
+            closeAnimeModal() {
+                document.getElementById('modal-anime').classList.add('hidden');
+                if (!this.isHandlingHistory) { this.modalHistoryActive = false; this.modalHistoryType = null; this.resetBackTrap(); }
+            }
+
+            async handleImageUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                document.getElementById('file-label-text').innerText = file.name;
+                const reader = new FileReader();
+                reader.onload = (evt) => this.openImageCropEditor(evt.target.result);
+                reader.readAsDataURL(file);
+            }
+
+            openImageCropFromPreview() {
+                if (!this.activeImageData || !this.activeImageData.startsWith('data:image/')) {
+                    this.showToast('Poster adjustment is available for device images.', 'error');
+                    return;
+                }
+                this.openImageCropEditor(this.activeImageData);
+            }
+
+            openImageCropEditor(source) {
+                const img = new Image();
+                img.onload = () => {
+                    this.imageCropSource = source;
+                    this.imageCropImage = img;
+                    this.imageCropScale = 1;
+                    this.imageCropX = 0;
+                    this.imageCropY = 0;
+                    const zoom = document.getElementById('image-crop-zoom');
+                    if (zoom) zoom.value = '1';
+                    document.getElementById('modal-image-crop').classList.remove('hidden');
+                    this.setupImageCropInteraction();
+                    this.drawImageCrop();
+                    lucide.createIcons();
+                };
+                img.onerror = () => this.showToast('Could not open this image.', 'error');
+                img.src = source;
+            }
+
+            setupImageCropInteraction() {
+                const canvas = document.getElementById('image-crop-canvas');
+                const zoom = document.getElementById('image-crop-zoom');
+                if (!canvas || !zoom || canvas.dataset.cropBound === '1') return;
+                canvas.dataset.cropBound = '1';
+
+                const pointerDown = (e) => {
+                    this.imageCropDragging = true;
+                    this.imageCropLastX = e.clientX;
+                    this.imageCropLastY = e.clientY;
+                    canvas.setPointerCapture?.(e.pointerId);
+                };
+                const pointerMove = (e) => {
+                    if (!this.imageCropDragging) return;
+                    const dx = e.clientX - this.imageCropLastX;
+                    const dy = e.clientY - this.imageCropLastY;
+                    this.imageCropLastX = e.clientX;
+                    this.imageCropLastY = e.clientY;
+                    this.imageCropX += dx;
+                    this.imageCropY += dy;
+                    this.clampImageCropPosition();
+                    this.drawImageCrop();
+                };
+                const pointerUp = () => { this.imageCropDragging = false; };
+                canvas.addEventListener('pointerdown', pointerDown);
+                canvas.addEventListener('pointermove', pointerMove);
+                canvas.addEventListener('pointerup', pointerUp);
+                canvas.addEventListener('pointercancel', pointerUp);
+                zoom.addEventListener('input', () => {
+                    this.imageCropScale = parseFloat(zoom.value) || 1;
+                    this.clampImageCropPosition();
+                    const label = document.getElementById('image-crop-zoom-value');
+                    if (label) label.textContent = `${Math.round(this.imageCropScale * 100)}%`;
+                    this.drawImageCrop();
+                });
+            }
+
+            getImageCropMetrics() {
+                const canvas = document.getElementById('image-crop-canvas');
+                if (!canvas || !this.imageCropImage) return null;
+                const rect = canvas.getBoundingClientRect();
+                const width = rect.width || 240;
+                const height = rect.height || 360;
+                const baseScale = Math.max(width / this.imageCropImage.naturalWidth, height / this.imageCropImage.naturalHeight);
+                return { width, height, baseScale, scale: baseScale * this.imageCropScale };
+            }
+
+            clampImageCropPosition() {
+                const m = this.getImageCropMetrics();
+                if (!m) return;
+                const drawW = this.imageCropImage.naturalWidth * m.scale;
+                const drawH = this.imageCropImage.naturalHeight * m.scale;
+                const maxX = Math.max(0, (drawW - m.width) / 2);
+                const maxY = Math.max(0, (drawH - m.height) / 2);
+                this.imageCropX = Math.max(-maxX, Math.min(maxX, this.imageCropX));
+                this.imageCropY = Math.max(-maxY, Math.min(maxY, this.imageCropY));
+            }
+
+            drawImageCrop() {
+                const canvas = document.getElementById('image-crop-canvas');
+                const m = this.getImageCropMetrics();
+                if (!canvas || !m || !this.imageCropImage) return;
+                const dpr = Math.min(window.devicePixelRatio || 1, 2);
+                canvas.width = Math.round(m.width * dpr);
+                canvas.height = Math.round(m.height * dpr);
+                const ctx = canvas.getContext('2d');
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+                ctx.fillStyle = '#0d0e15';
+                ctx.fillRect(0, 0, m.width, m.height);
+                const drawW = this.imageCropImage.naturalWidth * m.scale;
+                const drawH = this.imageCropImage.naturalHeight * m.scale;
+                ctx.drawImage(this.imageCropImage, (m.width - drawW) / 2 + this.imageCropX, (m.height - drawH) / 2 + this.imageCropY, drawW, drawH);
+            }
+
+            applyImageCrop() {
+                const canvas = document.getElementById('image-crop-canvas');
+                const m = this.getImageCropMetrics();
+                if (!canvas || !m || !this.imageCropImage) return;
+
+                const outW = 600;
+                const outH = 900;
+                const out = document.createElement('canvas');
+                out.width = outW;
+                out.height = outH;
+                const ctx = out.getContext('2d');
+                const factor = outW / m.width;
+                const drawW = this.imageCropImage.naturalWidth * m.scale * factor;
+                const drawH = this.imageCropImage.naturalHeight * m.scale * factor;
+                ctx.fillStyle = '#0d0e15';
+                ctx.fillRect(0, 0, outW, outH);
+                ctx.drawImage(this.imageCropImage, (outW - drawW) / 2 + this.imageCropX * factor, (outH - drawH) / 2 + this.imageCropY * factor, drawW, drawH);
+
+                this.activeImageData = out.toDataURL('image/jpeg', 0.88);
+                document.getElementById('image-preview').src = this.activeImageData;
+                document.getElementById('image-preview-container').classList.remove('hidden');
+                this.closeImageCrop(true);
+                this.showToast('Poster adjusted successfully!');
+            }
+
+            closeImageCrop(applied = false) {
+                document.getElementById('modal-image-crop').classList.add('hidden');
+                this.imageCropDragging = false;
+                if (!applied) this.imageCropSource = null;
+            }
+
+            handleImageUrlInput(url) {
+                if (!url) return;
+                this.activeImageData = url;
+                document.getElementById('image-preview').src = url;
+                document.getElementById('image-preview-container').classList.remove('hidden');
+            }
+
+            clearImagePreview() {
+                this.activeImageData = null;
+                document.getElementById('input-file').value = '';
+                document.getElementById('input-poster-url').value = '';
+                document.getElementById('image-preview-container').classList.add('hidden');
+            }
+
+            addSeasonField(data = null) {
+                const container = document.getElementById('form-seasons-container');
+                const seasonCount = container.querySelectorAll('.season-row').length;
+                const seasonDiv = document.createElement('div');
+                seasonDiv.className = 'season-row bg-slate-900/90 border border-slate-700/80 rounded-xl p-3 space-y-2';
+                const sName = data ? data.name : `Season ${seasonCount + 1}`;
+                const isComp = data ? !!data.isCompleted : false;
+                const sStatus = data ? (data.status || (isComp ? 'Completed' : 'Unwatched')) : 'Unwatched';
+                seasonDiv.dataset.originalCompleted = isComp ? 'true' : 'false';
+                seasonDiv.dataset.originalStatus = sStatus;
+                seasonDiv.innerHTML = `
+                    <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-2 flex-1">
+                            <i data-lucide="folder" class="w-4 h-4 text-purple-400 shrink-0"></i>
+                            <input type="text" value="${String(sName).replace(/"/g, '&quot;')}" placeholder="Season Name" class="season-name-input bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1 flex-1 text-xs focus:outline-none">
+                        </div>
+                        <button type="button" onclick="this.closest('.season-row').remove()" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="x" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="parts-container space-y-1.5 pl-3 border-l-2 border-purple-500/20"></div>
+                    <button type="button" onclick="app.addPartField(this)" class="text-[10px] text-purple-400 hover:text-purple-300 font-semibold flex items-center space-x-1"><i data-lucide="plus" class="w-3 h-3"></i><span>Add Part</span></button>`;
+                container.appendChild(seasonDiv);
+                if (data && data.parts) data.parts.forEach(p => this.addPartField(seasonDiv.querySelector('button'), p));
+                lucide.createIcons();
+            }
+
+            addPartField(btnEl, partData = null) {
+                const partsContainer = btnEl.closest('.season-row').querySelector('.parts-container');
+                const pIdx = partsContainer.children.length;
+                const partDiv = document.createElement('div');
+                partDiv.className = 'part-row flex items-center gap-2';
+                const pName = partData ? partData.name : `Part ${pIdx + 1}`;
+                const pStatus = partData ? partData.status : 'Unwatched';
+                partDiv.dataset.originalStatus = pStatus || 'Unwatched';
+                partDiv.innerHTML = `<input type="text" value="${String(pName).replace(/"/g, '&quot;')}" placeholder="Part Name" class="part-name-input bg-slate-800 border border-slate-700 text-white rounded-lg px-2 py-1 flex-1 text-[11px] focus:outline-none"><button type="button" onclick="this.closest('.part-row').remove()" class="text-slate-500 hover:text-red-400 p-0.5"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`;
+                partsContainer.appendChild(partDiv);
+                lucide.createIcons();
+            }
+
+            addMovieField(movieData = null) {
+                const container = document.getElementById('form-seasons-container');
+                const movieDiv = document.createElement('div');
+                movieDiv.className = 'movie-row flex items-center gap-2 bg-slate-900/90 border border-pink-500/10 rounded-xl p-2.5';
+                const movieName = typeof movieData === 'string' ? movieData : (movieData ? movieData.name : `Movie ${container.querySelectorAll('.movie-row').length + 1}`);
+                movieDiv.dataset.originalStatus = movieData && movieData.status ? movieData.status : 'Unwatched';
+                movieDiv.innerHTML = `<i data-lucide="clapperboard" class="w-4 h-4 text-pink-400 shrink-0"></i><input type="text" value="${String(movieName).replace(/"/g, '&quot;')}" placeholder="Movie Name" class="movie-name-input bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 flex-1 text-[11px] focus:outline-none"><button type="button" onclick="this.closest('.movie-row').remove()" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`;
+                container.appendChild(movieDiv);
+                lucide.createIcons();
+            }
+
+            addOVAField(ovaData = null) {
+                const container = document.getElementById('form-seasons-container');
+                const ovaDiv = document.createElement('div');
+                ovaDiv.className = 'ova-row flex items-center gap-2 bg-slate-900/90 border border-cyan-500/10 rounded-xl p-2.5';
+                const ovaName = typeof ovaData === 'string' ? ovaData : (ovaData ? ovaData.name : `OVA ${container.querySelectorAll('.ova-row').length + 1}`);
+                ovaDiv.dataset.originalStatus = ovaData && ovaData.status ? ovaData.status : 'Unwatched';
+                ovaDiv.innerHTML = `<i data-lucide="tv-minimal" class="w-4 h-4 text-cyan-400 shrink-0"></i><input type="text" value="${String(ovaName).replace(/"/g, '&quot;')}" placeholder="OVA Name" class="ova-name-input bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-1.5 flex-1 text-[11px] focus:outline-none"><button type="button" onclick="this.closest('.ova-row').remove()" class="text-slate-500 hover:text-red-400 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`;
+                container.appendChild(ovaDiv);
+                lucide.createIcons();
+            }
+
+            async saveAnimeForm(e) {
+                e.preventDefault();
+
+                const id = document.getElementById('anime-id').value || 'anime_' + Date.now();
+                const title = document.getElementById('input-title').value.trim();
+                const releaseStatus = document.getElementById('input-release-status').value;
+                const watchStatus = document.getElementById('input-watch-status').value;
+                const dashboardVisible = document.getElementById('input-dashboard-visible').checked;
+                const tagsRaw = document.getElementById('input-tags').value;
+                const notes = document.getElementById('input-notes').value.trim();
+
+                const tags = tagsRaw.split(',').map(t => t.trim()).filter(Boolean);
+
+                const now = Date.now();
+                const existing = this.animeList.find(a => a.id === id);
+
+                const entries = [];
+                const seasons = [];
+                const movies = [];
+                const ovas = [];
+                const oldEntries = existing ? (existing.entries || []) : [];
+                let oldSeasonIdx = 0;
+                let oldMovieIdx = 0;
+                let oldOvaIdx = 0;
+                document.querySelectorAll('#form-seasons-container > .season-row, #form-seasons-container > .movie-row, #form-seasons-container > .ova-row').forEach(row => {
+                    if (row.classList.contains('season-row')) {
+                        const originalSeason = oldEntries.length ? oldEntries.filter(e => e.type === 'season')[oldSeasonIdx] : (existing && existing.seasons ? existing.seasons[oldSeasonIdx] : null);
+                        const sName = row.querySelector('.season-name-input').value.trim();
+                        const isCompleted = originalSeason ? !!originalSeason.isCompleted : row.dataset.originalCompleted === 'true';
+                        const seasonStatus = originalSeason ? (originalSeason.status || (isCompleted ? 'Completed' : 'Unwatched')) : (row.dataset.originalStatus || 'Unwatched');
+                        const parts = [];
+                        row.querySelectorAll('.part-row').forEach((pRow, pIdx) => {
+                            const originalPart = originalSeason && originalSeason.parts ? originalSeason.parts[pIdx] : null;
+                            parts.push({ name: pRow.querySelector('.part-name-input').value.trim(), status: originalPart ? (originalPart.status || 'Unwatched') : (pRow.dataset.originalStatus || 'Unwatched') });
+                        });
+                        const season = { type: 'season', name: sName, isCompleted, status: seasonStatus, parts };
+                        entries.push(season); seasons.push({ ...season }); delete seasons[seasons.length - 1].type;
+                        oldSeasonIdx++;
+                    } else if (row.classList.contains('movie-row')) {
+                        const mName = row.querySelector('.movie-name-input').value.trim();
+                        if (!mName) return;
+                        const originalMovie = oldEntries.length ? oldEntries.filter(e => e.type === 'movie')[oldMovieIdx] : (existing && existing.movies ? existing.movies[oldMovieIdx] : null);
+                        const movie = { type: 'movie', name: mName, status: originalMovie ? (originalMovie.status || 'Unwatched') : (row.dataset.originalStatus || 'Unwatched') };
+                        entries.push(movie); movies.push({ ...movie }); delete movies[movies.length - 1].type;
+                        oldMovieIdx++;
+                    } else {
+                        const oName = row.querySelector('.ova-name-input').value.trim();
+                        if (!oName) return;
+                        const originalOVA = oldEntries.length ? oldEntries.filter(e => e.type === 'ova')[oldOvaIdx] : (existing && existing.ovas ? existing.ovas[oldOvaIdx] : null);
+                        const ova = { type: 'ova', name: oName, status: originalOVA ? (originalOVA.status || 'Unwatched') : (row.dataset.originalStatus || 'Unwatched') };
+                        entries.push(ova); ovas.push({ ...ova }); delete ovas[ovas.length - 1].type;
+                        oldOvaIdx++;
+                    }
+                });
+
+                // Journey logs are managed from the Details screen. Preserve existing logs here.
+                const journeyEvents = existing ? (existing.journeyEvents || []) : [];
+
+                const animeObj = {
+                    id,
+                    title,
+                    poster: this.activeImageData || (existing ? existing.poster : null),
+                    releaseStatus,
+                    watchStatus,
+                    dashboardVisible,
+                    rating: this.modalRatingValue,
+                    tags,
+                    notes,
+                    seasons,
+                    movies,
+                    ovas,
+                    entries,
+                    journeyEvents,
+                    createdAt: existing ? existing.createdAt : now,
+                    updatedAt: now
+                };
+
+                try {
+                    await this.db.saveAnime(animeObj);
+                    await this.loadData();
+                    this.closeAnimeModal();
+                    this.showToast(`Saved "${title}" successfully!`);
+
+                    if (this.currentView === 'details' && this.selectedAnimeId === id) {
+                        this.openAnimeDetails(id);
+                    }
+                } catch (err) {
+                    this.showToast('Error saving anime data.', 'error');
+                }
+            }
+
+            editCurrentAnime() {
+                if (this.selectedAnimeId) this.openAnimeModal(this.selectedAnimeId);
+            }
+
+            confirmDeleteAnime() {
+                if (!this.selectedAnimeId) return;
+                const anime = this.animeList.find(a => a.id === this.selectedAnimeId);
+                this.showConfirm(
+                    'Delete Anime',
+                    `Are you sure you want to delete "${anime ? anime.title : 'this anime'}"?`,
+                    async () => {
+                        await this.db.deleteAnime(this.selectedAnimeId);
+                        await this.loadData();
+                        this.showToast('Anime deleted.');
+                        this.switchView('library');
+                    }
+                );
+            }
+
+            openHelpGuide() {
+                document.getElementById('modal-help-guide').classList.remove('hidden');
+                lucide.createIcons();
+                if (!this.modalHistoryActive && !this.isHandlingHistory) this.activateModalBack('help');
+            }
+
+            closeHelpGuide() {
+                document.getElementById('modal-help-guide').classList.add('hidden');
+                if (!this.isHandlingHistory) { this.modalHistoryActive = false; this.modalHistoryType = null; this.resetBackTrap(); }
+            }
+
+            openJourneyLogModal(editIndex = null) {
+                const anime = this.animeList.find(a => a.id === this.selectedAnimeId);
+                if (!anime) return;
+                const container = document.getElementById('journey-log-editor');
+                container.innerHTML = '';
+                const events = anime.journeyEvents || [];
+                if (events.length === 0) this.addJourneyLogRow();
+                else events.forEach(ev => this.addJourneyLogRow(ev));
+                document.getElementById('modal-journey-log').classList.remove('hidden');
+                lucide.createIcons();
+                if (!this.modalHistoryActive && !this.isHandlingHistory) this.activateModalBack('journey-log');
+            }
+
+            addJourneyLogRow(event = null) {
+                const row = document.createElement('div');
+                row.className = 'journey-log-row bg-gradient-to-br from-slate-900/90 via-slate-900/80 to-purple-950/20 border border-white/5 rounded-2xl p-3.5 space-y-2.5 shadow-lg shadow-black/10';
+                row.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <select class="journey-log-type flex-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:border-purple-500">
+                            <option value="Started New">Started New</option>
+                            <option value="Started Again">Started Again</option>
+                            <option value="Completed Available Seasons">Completed Available Seasons</option>
+                            <option value="Completed Full Anime">Completed Full Anime</option>
+                            <option value="Watched">Watched</option>
+                        </select>
+                        <button type="button" onclick="this.closest('.journey-log-row').remove()" class="text-slate-500 hover:text-red-400 p-1" title="Delete log"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="flex gap-2">
+                        <select class="journey-log-month flex-1 bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-2 text-xs focus:outline-none">
+                            <option value="Unknown">Unknown</option><option value="January">January</option><option value="February">February</option><option value="March">March</option><option value="April">April</option><option value="May">May</option><option value="June">June</option><option value="July">July</option><option value="August">August</option><option value="September">September</option><option value="October">October</option><option value="November">November</option><option value="December">December</option>
+                        </select>
+                        <select class="journey-log-year w-24 bg-slate-800 border border-slate-700 text-white rounded-lg px-2.5 py-2 text-xs focus:outline-none focus:border-purple-500">
+                            ${Array.from({length: 41}, (_, i) => 2010 + i).map(y => `<option value="${y}">${y}</option>`).join('')}
+                        </select>
+                    </div>`;
+                const legacyTypeMap = { 'Started': 'Started New', 'Started again': 'Started Again', 'Completed': 'Completed Available Seasons', 'Available': 'Completed Available Seasons', 'Completed fully': 'Completed Full Anime', 'Watched': 'Watched' };
+                const normalizedType = event ? (legacyTypeMap[event.type] || event.type) : 'Started New';
+                row.querySelector('.journey-log-type').value = ['Started New','Started Again','Completed Available Seasons','Completed Full Anime','Watched'].includes(normalizedType) ? normalizedType : 'Started New';
+                const yearSelect = row.querySelector('.journey-log-year');
+                const currentYear = new Date().getFullYear();
+                const currentMonth = new Intl.DateTimeFormat('en-US', { month: 'long' }).format(new Date());
+                const eventMonth = event && event.month ? String(event.month) : currentMonth;
+                row.querySelector('.journey-log-month').value = eventMonth;
+                const eventYear = event && event.year ? String(event.year) : String(currentYear);
+                yearSelect.value = eventYear;
+                if (yearSelect.value !== eventYear) {
+                    const option = document.createElement('option');
+                    option.value = eventYear; option.textContent = eventYear;
+                    yearSelect.appendChild(option);
+                    yearSelect.value = eventYear;
+                }
+                document.getElementById('journey-log-editor').appendChild(row);
+                lucide.createIcons();
+            }
+
+            closeJourneyLogModal() {
+                document.getElementById('modal-journey-log').classList.add('hidden');
+                if (!this.isHandlingHistory) { this.modalHistoryActive = false; this.modalHistoryType = null; this.resetBackTrap(); }
+            }
+
+            async saveJourneyLogs() {
+                const anime = this.animeList.find(a => a.id === this.selectedAnimeId);
+                if (!anime) return;
+                const events = [];
+                document.querySelectorAll('#journey-log-editor .journey-log-row').forEach(row => {
+                    const type = row.querySelector('.journey-log-type').value;
+                    const month = row.querySelector('.journey-log-month').value;
+                    const year = row.querySelector('.journey-log-year').value.trim();
+                    events.push({ type, month, year });
+                });
+                anime.journeyEvents = events;
+                anime.updatedAt = Date.now();
+                const savedDetailScroll = window.scrollY;
+                this.detailScrollY = savedDetailScroll;
+                await this.db.saveAnime(anime);
+                await this.loadData();
+                this.closeJourneyLogModal();
+                this.openAnimeDetails(anime.id);
+                this.detailScrollY = savedDetailScroll;
+                this.showToast('Journey logs saved successfully!');
+            }
+
+            renderJourneyTimeline() {
+                const container = document.getElementById('journey-timeline-container');
+                const emptyState = document.getElementById('journey-empty-state');
+                container.innerHTML = '';
+
+                const allEvents = [];
+                this.animeList.forEach(anime => {
+                    (anime.journeyEvents || []).forEach(ev => {
+                        allEvents.push({
+                            animeId: anime.id,
+                            title: anime.title,
+                            poster: anime.poster,
+                            type: ev.type,
+                            month: ev.month,
+                            year: ev.year
+                        });
+                    });
+                });
+
+                if (allEvents.length === 0) {
+                    container.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    return;
+                }
+
+                container.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+
+                const monthOrder = {
+                    January: 1, February: 2, March: 3, April: 4, May: 5, June: 6,
+                    July: 7, August: 8, September: 9, October: 10, November: 11, December: 12
+                };
+                const datedEvents = allEvents.filter(e => e.year);
+                const unknownEvents = allEvents.filter(e => !e.year);
+
+                // Oldest first at the top; newest entries appear at the bottom.
+                datedEvents.sort((a, b) => {
+                    const yearDiff = parseInt(a.year) - parseInt(b.year);
+                    if (yearDiff !== 0) return yearDiff;
+                    const aMonth = a.month === 'Unknown' ? 0 : (monthOrder[a.month] || 0);
+                    const bMonth = b.month === 'Unknown' ? 0 : (monthOrder[b.month] || 0);
+                    return aMonth - bMonth;
+                });
+
+                const groups = {};
+                datedEvents.forEach(ev => {
+                    const monthKey = ev.month === 'Unknown' ? '00' : String(monthOrder[ev.month] || 0).padStart(2, '0');
+                    const key = `${ev.year}-${monthKey}`;
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(ev);
+                });
+
+                Object.keys(groups).sort((a, b) => a.localeCompare(b)).forEach(key => {
+                    const events = groups[key];
+                    const first = events[0];
+                    const monthLabel = first.month === 'Unknown' ? `Unknown Month ${first.year}` : `${first.month || 'Date specified'} ${first.year}`;
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'relative space-y-3';
+                    groupDiv.innerHTML = `
+                        <div class="flex items-center space-x-2 -ml-6 sm:-ml-8">
+                            <div class="w-4 h-4 rounded-full bg-purple-500 border-4 border-[#0d0e15] shadow-lg"></div>
+                            <h3 class="text-lg font-bold text-gradient">${monthLabel}</h3>
+                        </div>
+                        <div class="space-y-2 pl-2">
+                            ${events.map(ev => `
+                                <div onclick="app.openAnimeDetails('${ev.animeId}')" class="glass-panel p-3 rounded-xl border border-slate-800 hover:border-purple-500/40 transition flex items-center space-x-3 cursor-pointer">
+                                    <img src="${ev.poster || 'https://placehold.co/100x150/1e1b4b/c084fc?text=Anime'}" class="w-9 h-12 object-cover rounded-md border border-slate-700">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                                            <span class="text-xs font-bold text-white truncate">${ev.title}</span>
+                                            <span class="text-[9px] font-semibold uppercase px-2 py-1 rounded-lg ${ev.type === 'Started' || ev.type === 'Started New' ? 'bg-blue-500/15 text-blue-300 border border-blue-500/20' : (ev.type === 'Started again' || ev.type === 'Started Again' ? 'bg-violet-500/15 text-violet-300 border border-violet-500/20' : (ev.type === 'Completed' || ev.type === 'Available' || ev.type === 'Completed Available Seasons' ? 'bg-amber-500/15 text-amber-300 border border-amber-500/20' : (ev.type === 'Completed fully' || ev.type === 'Completed Full Anime' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/20' : 'bg-cyan-500/15 text-cyan-300 border border-cyan-500/20')))}">${({'Started':'Started New','Started again':'Started Again','Completed':'Completed Available Seasons','Available':'Completed Available Seasons','Completed fully':'Completed Full Anime','Watched':'Watched'}[ev.type] || ev.type)}</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 mt-0.5 block">${ev.month && ev.month !== 'Unknown' ? ev.month : 'Unknown month'} ${ev.year}</span>
+                                    </div>
+                                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 shrink-0"></i>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    container.appendChild(groupDiv);
+                });
+
+                if (unknownEvents.length > 0) {
+                    const unknownDiv = document.createElement('div');
+                    unknownDiv.className = 'relative space-y-3 pt-4';
+                    unknownDiv.innerHTML = `
+                        <div class="flex items-center space-x-2 -ml-6 sm:-ml-8">
+                            <div class="w-4 h-4 rounded-full bg-slate-600 border-4 border-[#0d0e15]"></div>
+                            <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider">Date Unknown</h3>
+                        </div>
+                        <div class="space-y-2 pl-2">
+                            ${unknownEvents.map(ev => `
+                                <div onclick="app.openAnimeDetails('${ev.animeId}')" class="glass-panel p-3 rounded-xl border border-slate-800 hover:border-purple-500/40 transition flex items-center space-x-3 cursor-pointer">
+                                    <img src="${ev.poster || 'https://placehold.co/100x150/1e1b4b/c084fc?text=Anime'}" class="w-9 h-12 object-cover rounded-md border border-slate-700">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                                            <span class="text-xs font-bold text-white truncate">${ev.title}</span>
+                                            <span class="text-[9px] font-semibold uppercase px-2 py-1 rounded-lg bg-slate-500/15 text-slate-300 border border-slate-500/20">${({'Started':'Started New','Started again':'Started Again','Completed':'Completed Available Seasons','Available':'Completed Available Seasons','Completed fully':'Completed Full Anime','Watched':'Watched'}[ev.type] || ev.type)}</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-500 mt-0.5 block">Date Unknown</span>
+                                    </div>
+                                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-500 shrink-0"></i>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                    container.appendChild(unknownDiv);
+                }
+
+                lucide.createIcons();
+            }
+
+            async exportBackup() {
+                try {
+                    this.animeList.forEach(anime => { this.ensureStructuredEntries(anime); this.syncLegacyStructure(anime); });
+                    const data = {
+                        app: 'AniDiary',
+                        version: '1.4.2',
+                        exportedAt: new Date().toISOString(),
+                        features: {
+                            fixedBackgroundForLongScrollViews: true,
+                            journeyLogMonthPlaceholderRemoved: true,
+                            journeyLogWatched: true,
+                            dashboardVisibilityToggle: true
+                        },
+                        anime: this.animeList
+                    };
+
+                    const jsonStr = JSON.stringify(data, null, 2);
+                    const filename = `AniDiary_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+
+                    // In the Android APK use the native Storage Access Framework. This
+                    // opens Android's standard "Save as" picker and writes the JSON file
+                    // to the exact location selected by the user.
+                    if (window.AndroidAniDiary && typeof window.AndroidAniDiary.exportBackup === 'function') {
+                        window.AndroidAniDiary.exportBackup(jsonStr, filename);
+                        return;
+                    }
+
+                    // Browser fallback for the standalone HTML version.
+                    const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+                    const objectUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = objectUrl;
+                    a.download = filename;
+                    a.rel = 'noopener';
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        a.remove();
+                        URL.revokeObjectURL(objectUrl);
+                    }, 1000);
+                    this.showToast('Backup export started.');
+                } catch (err) {
+                    console.error(err);
+                    this.showToast('Failed to export backup.', 'error');
+                }
+            }
+
+            async importBackup(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (evt) => {
+                    try {
+                        const data = JSON.parse(evt.target.result);
+
+                        if (!data || !data.anime || !Array.isArray(data.anime)) {
+                            throw new Error('Invalid AniDiary backup format.');
+                        }
+
+                        this.showConfirm(
+                            'Restore Backup',
+                            `This will import ${data.anime.length} anime entries into your AniDiary. Existing duplicates will be overwritten. Proceed?`,
+                            async () => {
+                                for (const item of data.anime) {
+                                    if (item.id && item.title) {
+                                        item.dashboardVisible = item.dashboardVisible !== false;
+                                        this.ensureStructuredEntries(item);
+                                        this.syncLegacyStructure(item);
+                                        await this.db.saveAnime(item);
+                                    }
+                                }
+                                await this.loadData();
+                                this.showToast('Backup imported successfully!');
+                            }
+                        );
+
+                    } catch (err) {
+                        this.showToast('Failed to import backup: ' + err.message, 'error');
+                    }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            }
+
+            confirmClearAllData() {
+                this.showConfirm(
+                    'Clear All Data',
+                    'Are you completely sure? This will erase all your stored anime records permanently.',
+                    async () => {
+                        await this.db.clearAll();
+                        await this.loadData();
+                        this.showToast('Database wiped successfully.');
+                        this.switchView('dashboard');
+                    }
+                );
+            }
+
+            showConfirm(title, desc, actionCallback) {
+                document.getElementById('confirm-title').innerText = title;
+                document.getElementById('confirm-desc').innerText = desc;
+                this.confirmCallback = actionCallback;
+
+                // Treat every confirmation dialog as the current screen for Android Back.
+                // This is especially important for destructive actions such as Clear All Data.
+                if (!this.modalHistoryActive && !this.isHandlingHistory) this.activateModalBack('confirm');
+
+                const btn = document.getElementById('confirm-action-btn');
+                btn.onclick = () => {
+                    if (this.confirmCallback) this.confirmCallback();
+                    this.closeConfirmModal(true);
+                };
+
+                document.getElementById('modal-confirm').classList.remove('hidden');
+            }
+
+            closeConfirmModal(fromBack = false) {
+                document.getElementById('modal-confirm').classList.add('hidden');
+                this.confirmCallback = null;
+                if (!fromBack && !this.isHandlingHistory) { this.modalHistoryActive = false; this.modalHistoryType = null; this.resetBackTrap(); }
+            }
+        }
+
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new AniDiaryApp();
+            app.init();
+        });
+    </script>
+</body>
+</html>
