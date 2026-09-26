@@ -43,18 +43,42 @@ jobs:
           sed -i 's/versionCode .*/versionCode 10402/' android/app/build.gradle
           sed -i 's/versionName .*/versionName "1.4.2"/' android/app/build.gradle
 
+      - name: Decode release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/AniDiary-release.jks
+          test -s android/app/AniDiary-release.jks
+
+      - name: Configure release signing
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          {
+            echo "ANIDIARY_KEYSTORE_FILE=\$rootDir/app/AniDiary-release.jks"
+            echo "ANIDIARY_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+            echo "ANIDIARY_KEY_ALIAS=$KEY_ALIAS"
+            echo "ANIDIARY_KEY_PASSWORD=$KEY_PASSWORD"
+          } >> android/gradle.properties
+
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
-      - name: Build AniDiary APK
+      - name: Build AniDiary release APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleRelease
 
       - name: Rename APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk AniDiary.apk
+        run: cp android/app/build/outputs/apk/release/app-release.apk AniDiary-1.4.2-release.apk
 
-      - name: Upload AniDiary APK
+      - name: Remove signing keystore
+        if: always()
+        run: rm -f android/app/AniDiary-release.jks
+
+      - name: Upload AniDiary release APK
         uses: actions/upload-artifact@v4
         with:
-          name: AniDiary-1.4.2
-          path: AniDiary.apk
+          name: AniDiary-1.4.2-release
+          path: AniDiary-1.4.2-release.apk
