@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📚 AniDiary
+# ⛩️ AniDiary
 
 **Anime Journey Tracker**
 
