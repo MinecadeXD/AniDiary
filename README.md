@@ -68,7 +68,7 @@
 
 For using AniDiary:
 
-- Android device running a supported Android version.
+- **Android 7.0 (API 24) or newer.**
 - Internet access may be required for CDN-hosted UI dependencies and externally hosted anime poster images.
 
 For development and Android builds:
