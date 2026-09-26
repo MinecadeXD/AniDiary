@@ -2707,6 +2707,11 @@
                     'Are you completely sure? This will erase all your stored anime records permanently.',
                     async () => {
                         await this.db.clearAll();
+                        localStorage.removeItem(this.libraryFilterStorageKey);
+                        ['filter-watch', 'filter-release', 'filter-type', 'sort-order'].forEach((elementId) => {
+                            const select = document.getElementById(elementId);
+                            if (select) select.value = select.options[0].value;
+                        });
                         await this.loadData();
                         this.showToast('Database wiped successfully.');
                         this.switchView('dashboard');
