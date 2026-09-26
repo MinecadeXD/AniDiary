@@ -169,10 +169,6 @@ AniDiary stores anime diary data locally on the device for normal use. Export an
 
 Anime poster images may use externally hosted image URLs, and the application loads its UI dependencies from CDN services.
 
-## Credits
-
-Developed by Minecade.
-
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for the full license text.
