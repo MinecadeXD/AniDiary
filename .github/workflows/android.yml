@@ -57,7 +57,7 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           {
-            echo "ANIDIARY_KEYSTORE_FILE=\$rootDir/app/AniDiary-release.jks"
+            echo "ANIDIARY_KEYSTORE_FILE=app/AniDiary-release.jks"
             echo "ANIDIARY_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
             echo "ANIDIARY_KEY_ALIAS=$KEY_ALIAS"
             echo "ANIDIARY_KEY_PASSWORD=$KEY_PASSWORD"
