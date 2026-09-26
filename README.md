@@ -64,6 +64,32 @@
 - No account is required for normal anime tracking.
 - UI dependencies are loaded from CDN services, so internet access may be required when the app first loads or when those resources are not cached.
 
+## Requirements
+
+For using AniDiary:
+
+- Android device running a supported Android version.
+- Internet access may be required for CDN-hosted UI dependencies and externally hosted anime poster images.
+
+For development and Android builds:
+
+- Node.js 22
+- Java 21 (Temurin recommended)
+- npm
+- Git
+- Android SDK compatible with the project's configured Android/Capacitor versions
+
+## Installation
+
+### Android release
+
+1. Open the [latest AniDiary release](https://github.com/MinecadeXD/AniDiary/releases/latest).
+2. Download the release APK.
+3. Install the APK on your Android device.
+4. If Android asks for permission to install apps from the source you used, allow it and continue the installation.
+
+AniDiary does not require an account for normal use. Your anime diary data is stored locally on the device.
+
 ## Current Version
 
 **1.4.2**
