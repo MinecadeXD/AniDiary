@@ -1,14 +1,20 @@
 {
   "name": "anidiary",
   "version": "1.4.2",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "description": "A personal anime journey tracker for organizing your anime library, tracking watch progress, recording your anime journey, and managing local backups.",
+  "scripts": {},
+  "keywords": [
+    "anime",
+    "anime-tracker",
+    "anime-diary",
+    "anime-library",
+    "watchlist",
+    "watch-tracker",
+    "anime-journal",
+    "capacitor"
+  ],
+  "author": "Minecade",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "@capacitor/android": "^8.5.2",
