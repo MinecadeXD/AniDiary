@@ -1056,6 +1056,7 @@
                 this.detailScrollY = 0;
                 this.forceDetailTop = false;
                 this.selectedTagFilter = null;
+                this.libraryFilterStorageKey = 'AniDiaryLibraryFilters';
                 this.activeImageData = null;
                 this.confirmCallback = null;
                 this.modalRatingValue = null; // 0 to 10 in steps of 0.5
@@ -1089,6 +1090,7 @@
                 };
                 try {
                     await this.db.open();
+                    this.loadLibraryFilters();
                     await this.loadData();
                     this.switchView('dashboard');
                     lucide.createIcons();
@@ -1104,6 +1106,48 @@
                 this.renderTagFilters();
                 this.renderLibrary();
                 this.renderJourneyTimeline();
+            }
+
+            loadLibraryFilters() {
+                try {
+                    const raw = localStorage.getItem(this.libraryFilterStorageKey);
+                    if (!raw) return;
+
+                    const saved = JSON.parse(raw);
+                    const applyIfValid = (elementId, value) => {
+                        if (value === undefined || value === null) return;
+                        const select = document.getElementById(elementId);
+                        if (!select) return;
+                        const isValid = Array.from(select.options).some(option => option.value === value);
+                        if (isValid) select.value = value;
+                    };
+
+                    applyIfValid('filter-watch', saved.watch);
+                    applyIfValid('filter-release', saved.release);
+                    applyIfValid('filter-type', saved.type);
+                    applyIfValid('sort-order', saved.sort);
+                } catch (err) {
+                    console.warn('Unable to restore AniDiary library filters.', err);
+                }
+            }
+
+            saveLibraryFilters() {
+                try {
+                    const watch = document.getElementById('filter-watch');
+                    const release = document.getElementById('filter-release');
+                    const type = document.getElementById('filter-type');
+                    const sort = document.getElementById('sort-order');
+                    if (!watch || !release || !type || !sort) return;
+
+                    localStorage.setItem(this.libraryFilterStorageKey, JSON.stringify({
+                        watch: watch.value,
+                        release: release.value,
+                        type: type.value,
+                        sort: sort.value
+                    }));
+                } catch (err) {
+                    console.warn('Unable to save AniDiary library filters.', err);
+                }
             }
 
             showToast(message, type = 'info') {
@@ -1492,6 +1536,7 @@
                 const filterRelease = document.getElementById('filter-release').value;
                 const filterType = document.getElementById('filter-type').value;
                 const sortOrder = document.getElementById('sort-order').value;
+                this.saveLibraryFilters();
 
                 let filtered = [...this.animeList];
 
