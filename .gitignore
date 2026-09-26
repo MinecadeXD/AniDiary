@@ -4,3 +4,17 @@ android/build/
 android/app/build/
 *.log
 .DS_Store
+
+# IDE files
+.idea/
+.vscode/
+
+# Local signing files
+*.jks
+*.keystore
+
+# Generated APKs
+*.apk
+
+# Temporary/generated artifacts
+*.aab
