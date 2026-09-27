@@ -118,7 +118,8 @@ The main application is intentionally kept in a single `www/index.html` file to 
 AniDiary/
 ├── .github/
 │   └── workflows/
-│       └── android.yml
+│       ├── android.yml
+│       └── static.yml
 ├── android/
 │   ├── app/
 │   ├── gradle/
@@ -137,7 +138,14 @@ AniDiary/
 └── README.md
 ```
 
-## Android Build
+## GitHub Actions & Deployment
+
+AniDiary uses two GitHub Actions workflows:
+
+- `.github/workflows/android.yml` — builds the signed Android release APK.
+- `.github/workflows/static.yml` — deploys the `www/` directory to GitHub Pages for the live web demo.
+
+### Android Build
 
 AniDiary's Android release APK is built automatically with GitHub Actions using `.github/workflows/android.yml`.
 
@@ -175,7 +183,7 @@ The generated APK can be downloaded from the workflow's **Artifacts** section af
 
 See [`.github/workflows/android.yml`](.github/workflows/android.yml) for the exact implementation.
 
-## Development
+### Development
 
 Install the project dependencies:
 
