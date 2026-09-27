@@ -19,6 +19,14 @@
 
 ---
 
+## 🌐 Live Demo
+
+Try AniDiary directly in your browser:
+
+👉 **[Open AniDiary Live Demo](https://minecadexd.github.io/AniDiary/)**
+
+No installation required.
+
 ## Features
 
 ### 📊 Dashboard & Library
