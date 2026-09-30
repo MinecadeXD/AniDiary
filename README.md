@@ -1,4 +1,6 @@
 <div align="center">
+  
+<img width="1280" height="640" alt="AniDiary Banner" src="https://github.com/user-attachments/assets/1d3ebc59-1f7f-4689-8e0e-3e03279ec6cd" />
 
 # ⛩️ AniDiary
 
